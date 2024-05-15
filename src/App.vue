@@ -1,6 +1,9 @@
 <script setup lang="ts">
-    import { RouterLink, RouterView } from "vue-router"
-    import HelloWorld from "./components/HelloWorld.vue"
+    import { RouterLink, RouterView } from "vue-router";
+    import HelloWorld from "./components/HelloWorld.vue";
+    import { UseGlobalObservable } from "./store/store";
+
+    const state = UseGlobalObservable();
 </script>
 
 <template>
@@ -9,7 +12,7 @@
 
         <div class="wrapper">
             <HelloWorld msg="Hello there!" />
-
+            <p>User State: {{ state.user?.isAuthorized ? "authorized": "not authorized" }}</p>
             <nav>
                 <RouterLink to="/">Home</RouterLink>
                 <RouterLink to="/about">About</RouterLink>
