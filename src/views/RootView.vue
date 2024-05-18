@@ -18,6 +18,7 @@
                 <v-list-item><RouterLink to="/">Home</RouterLink></v-list-item>
                 <v-list-item><RouterLink to="/about">About</RouterLink></v-list-item>
                 <v-list-item><RouterLink to="/login">Login</RouterLink></v-list-item>
+                <v-list-item><RouterLink to="/not-found">Not Found</RouterLink></v-list-item>
             </v-list>
         </v-navigation-drawer>
 
