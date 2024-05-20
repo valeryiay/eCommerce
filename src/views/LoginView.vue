@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { ValidationRules } from "@/utils/validationRules";
     export default {
         data: () => ({
             isPasswordVisible: false,
@@ -6,32 +7,7 @@
             email: null,
             password: null,
             loading: false,
-            rules: {
-                required: (value: string) => !!value || "Required",
-                noLeadingOrTrailingWhitespace: (value: string) =>
-                    /^(?! ).*[^ ]$/.test(value) ||
-                    "Must not contain leading or trailing whitespace",
-                isProperEmail: (value: string) =>
-                    /@/.test(value) ||
-                    "Must contain an '@' symbol separating local part and domain name",
-                isProperlyFormatted: (value: string) =>
-                    /[^\s@]+@[^\s@]+\.[^\s@]/.test(value) ||
-                    "Must be properly formatted (e.g., user@example.com)",
-                isEmailWithDomain: (value: string) =>
-                    /[^\s@]+\.[^\s@]/.test(value) ||
-                    "Must contain a domain name (e.g., example.com)",
-                minEight: (value: string) => value.length >= 8 || "Min 8 characters",
-                minOneDigit: (value: string) =>
-                    /(?=.*[0-9])/.test(value) || "Must contain at least one digit from 1 to 9",
-                minOneLowerCase: (value: string) =>
-                    /(?=.*[a-z])/.test(value) || "Must contain at least one lowercase letter",
-                minOneUpperCase: (value: string) =>
-                    /(?=.*[A-Z])/.test(value) || "Must contain at least one UPPERCASE letter",
-                minOneSpecialChar: (value: string) =>
-                    /(?=.*\W)/.test(value) || "Must contain at least one special character",
-                noLeadingTrailingWhitespace: (value: string) =>
-                    /^(?! ).*[^ ]$/.test(value) || "Must not contain leading or trailing whitespace"
-            }
+            commonRules: ValidationRules
         }),
         methods: {
             onSubmit() {
@@ -63,11 +39,11 @@
                     <v-text-field
                         v-model="email"
                         :rules="[
-                            rules.required,
-                            rules.isProperEmail,
-                            rules.isEmailWithDomain,
-                            rules.noLeadingOrTrailingWhitespace,
-                            rules.isProperlyFormatted
+                            commonRules.required,
+                            commonRules.isProperEmail,
+                            commonRules.isEmailWithDomain,
+                            commonRules.noLeadingTrailingWhitespace,
+                            commonRules.isProperlyFormatted
                         ]"
                         density="compact"
                         placeholder="Email address"
@@ -95,13 +71,13 @@
                         v-model="password"
                         :readonly="loading"
                         :rules="[
-                            rules.required,
-                            rules.minEight,
-                            rules.minOneDigit,
-                            rules.minOneLowerCase,
-                            rules.minOneUpperCase,
-                            rules.minOneSpecialChar,
-                            rules.noLeadingTrailingWhitespace
+                            commonRules.required,
+                            commonRules.minLength(8, 'Min 8 characters'),
+                            commonRules.minOneDigit,
+                            commonRules.minOneLowerCase,
+                            commonRules.minOneUpperCase,
+                            commonRules.minOneSpecialChar,
+                            commonRules.noLeadingTrailingWhitespace
                         ]"
                         :append-inner-icon="isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
                         :type="isPasswordVisible ? 'text' : 'password'"
