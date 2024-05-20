@@ -8,13 +8,29 @@
             loading: false,
             rules: {
                 required: (value: string) => !!value || "Required",
-                email: (value: string) => /^[--9^-~A-Z!#-'*+=?]+@[a-z0-9A-Z](?:[a-z0-9A-Z-]{0,61}[a-z0-9A-Z]|)(?:\.[a-z0-9A-Z](?:[a-z0-9A-Z-]{0,61}[a-z0-9A-Z]|))*$/.test(value) || "Invalid Email address",
+                noLeadingOrTrailingWhitespace: (value: string) =>
+                    /^(?! ).*[^ ]$/.test(value) ||
+                    "Must not contain leading or trailing whitespace",
+                isProperEmail: (value: string) =>
+                    /@/.test(value) ||
+                    "Must contain an '@' symbol separating local part and domain name",
+                isProperlyFormatted: (value: string) =>
+                    /[^\s@]+@[^\s@]+\.[^\s@]/.test(value) ||
+                    "Must be properly formatted (e.g., user@example.com)",
+                isEmailWithDomain: (value: string) =>
+                    /[^\s@]+\.[^\s@]/.test(value) ||
+                    "Must contain a domain name (e.g., example.com)",
                 minEight: (value: string) => value.length >= 8 || "Min 8 characters",
-                minOneDigit: (value: string) => /(?=.*[0-9])/.test(value) || "Must contain at least one digit from 1 to 9",
-                minOneLowerCase: (value: string) => /(?=.*[a-z])/.test(value) || "Must contain at least one lowercase letter",
-                minOneUpperCase: (value: string) => /(?=.*[A-Z])/.test(value) || "Must contain at least one UPPERCASE letter",
-                minOneSpecialChar: (value: string) => /(?=.*\W)/.test(value) || "Must contain at least one special character",
-                noLeadingTrailingWhitespace: (value: string) => /^(?! ).*[^ ]$/.test(value) || "Must not contain leading or trailing whitespace"
+                minOneDigit: (value: string) =>
+                    /(?=.*[0-9])/.test(value) || "Must contain at least one digit from 1 to 9",
+                minOneLowerCase: (value: string) =>
+                    /(?=.*[a-z])/.test(value) || "Must contain at least one lowercase letter",
+                minOneUpperCase: (value: string) =>
+                    /(?=.*[A-Z])/.test(value) || "Must contain at least one UPPERCASE letter",
+                minOneSpecialChar: (value: string) =>
+                    /(?=.*\W)/.test(value) || "Must contain at least one special character",
+                noLeadingTrailingWhitespace: (value: string) =>
+                    /^(?! ).*[^ ]$/.test(value) || "Must not contain leading or trailing whitespace"
             }
         }),
         methods: {
@@ -28,29 +44,31 @@
                 setTimeout(() => (this.loading = false), 3000);
             }
         }
-    }
+    };
 </script>
 
 <template>
     <v-layout>
         <v-main id="login-container" class="d-sm-flex align-center justify-center ga-16">
-            <h1 class="text-center">Welcome to our<br>eCommerce</h1>
-            <v-card
-                class="pa-12 pb-8"
-                elevation="8"
-                max-width="448"
-                rounded="lg"
-            >
+            <h1 class="text-center">Welcome to our<br />eCommerce</h1>
+            <v-card class="pa-12 pb-8" elevation="8" max-width="448" rounded="lg">
                 <v-form v-model="form" @submit.prevent="onSubmit">
                     <div class="app-logo text-center d-sm-flex justify-center ga-5">
-                        <h2 class="brand">eCommerce</h2><span class="app">app</span>
+                        <h2 class="brand">eCommerce</h2>
+                        <span class="app">app</span>
                     </div>
 
                     <div class="text-subtitle-1 text-medium-emphasis">Account</div>
 
                     <v-text-field
                         v-model="email"
-                        :rules="[rules.required, rules.email]"
+                        :rules="[
+                            rules.required,
+                            rules.isProperEmail,
+                            rules.isEmailWithDomain,
+                            rules.noLeadingOrTrailingWhitespace,
+                            rules.isProperlyFormatted
+                        ]"
                         density="compact"
                         placeholder="Email address"
                         prepend-inner-icon="mdi-email-outline"
@@ -59,7 +77,9 @@
                     >
                     </v-text-field>
 
-                    <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
+                    <div
+                        class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
+                    >
                         Password
                         <a
                             class="text-caption text-decoration-none text-blue"
@@ -74,7 +94,15 @@
                     <v-text-field
                         v-model="password"
                         :readonly="loading"
-                        :rules="[rules.required, rules.minEight, rules.minOneDigit, rules.minOneLowerCase, rules.minOneUpperCase, rules.minOneSpecialChar, rules.noLeadingTrailingWhitespace]"
+                        :rules="[
+                            rules.required,
+                            rules.minEight,
+                            rules.minOneDigit,
+                            rules.minOneLowerCase,
+                            rules.minOneUpperCase,
+                            rules.minOneSpecialChar,
+                            rules.noLeadingTrailingWhitespace
+                        ]"
                         :append-inner-icon="isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
                         :type="isPasswordVisible ? 'text' : 'password'"
                         density="compact"
@@ -86,17 +114,12 @@
                     >
                     </v-text-field>
 
-                    <v-card
-                        class="mb-12"
-                        color="surface-variant"
-                        variant="tonal"
-                    >
-                            <v-card-text class="text-medium-emphasis text-caption">
-                                Warning: After 3 consecutive failed login attempts,
-                                your account will be temporarily locked for three hours.
-                                If you must login now, you can also click "Forgot login password?"
-                                below to reset the login password.
-                            </v-card-text>
+                    <v-card class="mb-12" color="surface-variant" variant="tonal">
+                        <v-card-text class="text-medium-emphasis text-caption">
+                            Warning: After 3 consecutive failed login attempts, your account will be
+                            temporarily locked for three hours. If you must login now, you can also
+                            click "Forgot login password?" below to reset the login password.
+                        </v-card-text>
                     </v-card>
 
                     <v-btn
@@ -130,7 +153,8 @@
 
 <style scoped>
     #login-container {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background:
+            linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
             center / cover no-repeat url("../assets/img/eCommerce-store.png");
     }
 
