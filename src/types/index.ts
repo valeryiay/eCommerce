@@ -67,7 +67,7 @@ type CustomerWithToken = {
     token: TokenResponse;
 };
 
-export type Credentials = {
+type Credentials = {
     email: string;
     password: string;
 };
@@ -209,6 +209,7 @@ export type {
     Address,
     TokenResponse,
     Customer,
+    Credentials,
     CustomerWithToken,
     RegisterUser,
     CreateUser,

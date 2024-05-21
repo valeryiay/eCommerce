@@ -15,10 +15,9 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
-        "mobx": "^6.12.3",
-        "mobx-vue-lite": "^0.4.2",
         "vue": "^3.4.21",
-        "vue-router": "^4.3.0"
+        "vue-router": "^4.3.0",
+        "pinia": "^2.1.7"
     },
     "devDependencies": {
         "@mdi/font": "^7.4.47",

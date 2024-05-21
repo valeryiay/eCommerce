@@ -1,21 +1,17 @@
-// Vuetify
 import "vuetify/styles";
+import "@mdi/font/css/materialdesignicons.css";
+import "@/assets/css/main.css";
+
+import { createApp } from "vue";
+import App from "@/App.vue";
+import router from "@/router";
+import { createPinia } from "pinia";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 
-// Material design
-import "@mdi/font/css/materialdesignicons.css";
-
-// Main App css
-import "./assets/css/main.css";
-
-// Components
-import { createApp } from "vue";
-import App from "./App.vue";
-import router from "./router";
-
 // Set up
+const pinia = createPinia();
 const app = createApp(App);
 const vuetify = createVuetify({
     components,
@@ -27,6 +23,7 @@ const vuetify = createVuetify({
 
 // Bootstrap
 app
+    .use(pinia)
     .use(router)
     .use(vuetify);
 

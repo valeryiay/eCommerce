@@ -1,23 +1,42 @@
 <script lang="ts">
     import { ValidationRules } from "@/utils/validationRules";
+    import type { Credentials } from "@/types";
+    import { useAuthStore } from "@/store";
+
     export default {
         data: () => ({
             isPasswordVisible: false,
             form: false,
-            email: null,
-            password: null,
+            credentials: { email: "", password: "" } as unknown as Credentials,
             loading: false,
-            commonRules: ValidationRules
+            isLoginError: false,
+            commonValidationRules: ValidationRules
         }),
         methods: {
-            onSubmit() {
+            async onSubmit() {
                 if (!this.form) {
                     return;
                 }
 
                 this.loading = true;
+                this.isLoginError = false;
 
-                setTimeout(() => (this.loading = false), 3000);
+                const authStore = useAuthStore();
+
+                try {
+                    const response = await authStore.logIn(this.credentials);
+
+                    if (response instanceof Error) {
+                        throw Error(response.message);
+                    }
+
+                    this.loading = false;
+                } catch {
+                    setTimeout(() => {
+                        this.loading = false;
+                        this.isLoginError = true;
+                    }, 500);
+                }
             }
         }
     };
@@ -37,13 +56,14 @@
                     <div class="text-subtitle-1 text-medium-emphasis">Account</div>
 
                     <v-text-field
-                        v-model="email"
+                        class="mb-5"
+                        v-model="credentials.email"
                         :rules="[
-                            commonRules.required,
-                            commonRules.isProperEmail,
-                            commonRules.isEmailWithDomain,
-                            commonRules.noLeadingTrailingWhitespace,
-                            commonRules.isProperlyFormatted
+                            commonValidationRules.required,
+                            commonValidationRules.isProperEmail,
+                            commonValidationRules.isEmailWithDomain,
+                            commonValidationRules.noLeadingTrailingWhitespace,
+                            commonValidationRules.isProperlyFormatted
                         ]"
                         density="compact"
                         placeholder="Email address"
@@ -53,31 +73,18 @@
                     >
                     </v-text-field>
 
-                    <div
-                        class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
-                    >
-                        Password
-                        <a
-                            class="text-caption text-decoration-none text-blue"
-                            href="#"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            Forgot login password?
-                        </a>
-                    </div>
-
                     <v-text-field
-                        v-model="password"
+                        class="mb-5"
+                        v-model="credentials.password"
                         :readonly="loading"
                         :rules="[
-                            commonRules.required,
-                            commonRules.minLength(8, 'Min 8 characters'),
-                            commonRules.minOneDigit,
-                            commonRules.minOneLowerCase,
-                            commonRules.minOneUpperCase,
-                            commonRules.minOneSpecialChar,
-                            commonRules.noLeadingTrailingWhitespace
+                            commonValidationRules.required,
+                            commonValidationRules.minLength(8, 'Min 8 characters'),
+                            commonValidationRules.minOneDigit,
+                            commonValidationRules.minOneLowerCase,
+                            commonValidationRules.minOneUpperCase,
+                            commonValidationRules.minOneSpecialChar,
+                            commonValidationRules.noLeadingTrailingWhitespace
                         ]"
                         :append-inner-icon="isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
                         :type="isPasswordVisible ? 'text' : 'password'"
@@ -90,11 +97,10 @@
                     >
                     </v-text-field>
 
-                    <v-card class="mb-12" color="surface-variant" variant="tonal">
-                        <v-card-text class="text-medium-emphasis text-caption">
-                            Warning: After 3 consecutive failed login attempts, your account will be
-                            temporarily locked for three hours. If you must login now, you can also
-                            click "Forgot login password?" below to reset the login password.
+                    <v-card v-if="isLoginError" class="mb-10 text-center" color="surface-variant" variant="tonal">
+                        <v-card-text class="text-medium-emphasis text-error font-weight-bold">
+                            Your password is incorrect or this account doesn't exist.
+                            Please verify and try to log in again!
                         </v-card-text>
                     </v-card>
 
@@ -111,15 +117,12 @@
                         Log In
                     </v-btn>
 
+                    <v-divider />
+
                     <v-card-text class="text-center">
-                        <a
-                            class="text-blue text-decoration-none"
-                            href="#"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
+                        <RouterLink class="text-blue text-decoration-none" to="/register">
                             Sign up now <v-icon icon="mdi-chevron-right"></v-icon>
-                        </a>
+                        </RouterLink>
                     </v-card-text>
                 </v-form>
             </v-card>

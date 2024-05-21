@@ -1,5 +1,5 @@
 <template>
-    <v-layout class="not-found-container">
+    <v-layout class="not-found-container d-flex justify-center align-center">
         <v-card class="text-center not-found-card pa-10 rounded-lg">
             <h1 class="font-weight-light">404</h1>
             <h2>Page not found</h2>
@@ -8,15 +8,14 @@
                 <p>couldn’t find what you’re looking for.</p>
                 <p>Let’s find a better place for you to go.</p>
             </div>
-            <v-btn elevated size="large" color="teal-darken-1" class="pa-2 ma-10">
-                <a
-                    class="text-white text-decoration-none"
-                    href="/"
-                    rel="noopener noreferrer"
-                    target="_self"
-                >
-                    Go to Home page
-                </a>
+            <v-btn
+                to="/"
+                size="large"
+                color="teal-darken-1 text-white text-decoration-none"
+                class="pa-2 ma-10"
+                elevated
+            >
+                Go to Home page
             </v-btn>
         </v-card>
     </v-layout>
@@ -24,9 +23,6 @@
 
 <style scoped>
     .not-found-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
         background: url("../assets/img/notFound.png");
         min-width: 100vw;
         min-height: 100vh;

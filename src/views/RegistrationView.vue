@@ -16,9 +16,9 @@
             password: "",
             loading: false,
             commonRules: ValidationRules,
-        
+
             rules: {
-                noSpeacialChar: (value: string) => /^[a-zA-Z\s]*$/.test(value) || "No special characters allowed",
+                noSpecialChar: (value: string) => /^[a-zA-Z\s]*$/.test(value) || "No special characters allowed",
                 email: (value: string) => /^[--9^-~A-Z!#-'*+=?]+@[a-z0-9A-Z](?:[a-z0-9A-Z-]{0,61}[a-z0-9A-Z]|)(?:\.[a-z0-9A-Z](?:[a-z0-9A-Z-]{0,61}[a-z0-9A-Z]|))*$/.test(value) || "Invalid Email address",
                 zipCode: (value: string) => /^\d{5}$/.test(value) || "Zip code must be 5 digits",
                 ageLimit: (value: string) => {
@@ -78,12 +78,15 @@
                     </div>
 
                     <div class="text-subtitle-1 text-medium-emphasis">Registration</div>
-                
-                        <v-row>
+
+                        <v-row class="mb-1">
                             <v-col>
                                 <v-text-field
                                     v-model="firstName"
-                                    :rules="[commonRules.required, rules.noSpeacialChar, commonRules.minLength(1, 'First name must be at least 1 character long')]"
+                                    :rules="[
+                                        commonRules.required,
+                                        rules.noSpecialChar,
+                                        commonRules.minLength(1, 'First name must be at least 1 character long')]"
                                     density="compact"
                                     placeholder="First Name"
                                     variant="outlined"
@@ -94,7 +97,10 @@
                             <v-col>
                                 <v-text-field
                                     v-model="lastName"
-                                    :rules="[commonRules.required, rules.noSpeacialChar, commonRules.minLength(1, 'First name must be at least 1 character long')]"
+                                    :rules="[
+                                        commonRules.required,
+                                        rules.noSpecialChar,
+                                        commonRules.minLength(1, 'First name must be at least 1 character long')]"
                                     density="compact"
                                     placeholder="Last Name"
                                     variant="outlined"
@@ -126,20 +132,23 @@
                                 >
                                 </v-text-field>
                             </template>
-                            <v-date-picker 
-                                ref="picker" 
-                                v-model="birthDate" 
-                                @input="menu = false" 
+                            <v-date-picker
+                                ref="picker"
+                                v-model="birthDate"
+                                @input="menu = false"
                                 type="date"
                             >
                             </v-date-picker>
                         </v-menu>
 
-                        <v-row>
+                        <v-row class="mt-1">
                             <v-col>
                                 <v-text-field
                                     v-model="streetName"
-                                    :rules="[commonRules.required, commonRules.minLength(1, 'First name must be at least 1 character long')]"
+                                    :rules="[
+                                        commonRules.required,
+                                        commonRules.minLength(1, 'First name must be at least 1 character long')
+                                    ]"
                                     density="compact"
                                     placeholder="Street"
                                     variant="outlined"
@@ -150,7 +159,11 @@
                             <v-col>
                                 <v-text-field
                                     v-model="city"
-                                    :rules="[commonRules.required, rules.noSpeacialChar, commonRules.minLength(1, 'First name must be at least 1 character long')]"
+                                    :rules="[
+                                        commonRules.required,
+                                        rules.noSpecialChar,
+                                        commonRules.minLength(1, 'First name must be at least 1 character long')
+                                    ]"
                                     density="compact"
                                     placeholder="City"
                                     variant="outlined"
@@ -161,6 +174,7 @@
                         </v-row>
 
                     <v-text-field
+                        class="mb-4"
                         v-model="zip"
                         :rules="[commonRules.required, rules.zipCode]"
                         density="compact"
@@ -180,6 +194,7 @@
                     </v-select>
 
                     <v-text-field
+                        class="mb-4"
                         v-model="email"
                         :rules="[commonRules.required, rules.email]"
                         density="compact"
@@ -191,9 +206,18 @@
                     </v-text-field>
 
                     <v-text-field
+                        class="mb-5"
                         v-model="password"
                         :readonly="loading"
-                        :rules="[commonRules.required, commonRules.minLength(8, 'Min 8 characters'), commonRules.minOneDigit, commonRules.minOneLowerCase, commonRules.minOneUpperCase, commonRules.minOneSpecialChar, commonRules.noLeadingTrailingWhitespace]"
+                        :rules="[
+                            commonRules.required,
+                            commonRules.minLength(8, 'Min 8 characters'),
+                            commonRules.minOneDigit,
+                            commonRules.minOneLowerCase,
+                            commonRules.minOneUpperCase,
+                            commonRules.minOneSpecialChar,
+                            commonRules.noLeadingTrailingWhitespace
+                        ]"
                         :append-inner-icon="isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
                         :type="isPasswordVisible ? 'text' : 'password'"
                         density="compact"
@@ -217,16 +241,13 @@
                         Create an account
                     </v-btn>
 
+                    <v-divider />
+
                     <v-card-text class="text-center">
                         <p>Already have an account?</p>
-                        <a
-                            class="text-blue text-decoration-none"
-                            href="/login"
-                            rel="noopener noreferrer"
-                            target="_self"
-                        >
+                        <RouterLink class="text-blue text-decoration-none" to="/login">
                             Log in <v-icon icon="mdi-chevron-right"></v-icon>
-                        </a>
+                        </RouterLink>
                     </v-card-text>
                 </v-form>
             </v-card>
@@ -236,7 +257,7 @@
 
 <style scoped>
     #registration-container {
-        background: 
+        background:
             linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
             url("../assets/img/eCommerce-registration.svg") left no-repeat,
             url("../assets/img/backgroundRegistration.png") center / cover no-repeat;

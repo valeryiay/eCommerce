@@ -5,6 +5,7 @@ import AboutView from "@/views/AboutView.vue";
 import LoginView from "@/views/LoginView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
 import RegistrationView from "@/views/RegistrationView.vue";
+import { useAuthStore } from "@/store";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,7 +25,10 @@ const router = createRouter({
                     name: "about",
                     component: AboutView
                 }
-            ]
+            ],
+            meta: {
+                requiresAuth: true
+            }
         },
         {
             path: "/login",
@@ -32,16 +36,24 @@ const router = createRouter({
             component: LoginView
         },
         {
-            path: "/not-found",
-            name: "not-found",
-            component: NotFoundView
-        },
-        {
-            path: "/registration",
+            path: "/register",
             name: "registration",
             component: RegistrationView
+        },
+        {
+            path: "/:pathMatch(.*)*",
+            name: "not-found",
+            component: NotFoundView
         }
     ]
+});
+
+router.beforeEach((to) => {
+    const authStore = useAuthStore();
+
+    if (to.meta.requiresAuth && !authStore.isAuthorized) {
+        return { name: "login" };
+    }
 });
 
 export default router;
