@@ -23,7 +23,8 @@ import type {
     ProductApiResponse,
     Cart,
     CartAPI,
-    IHash
+    IHash,
+    ProductSingle
 } from "../types";
 
 import { PRODUCTS_ON_PAGE, MAX_PRICE_FILTER } from "../constants";
@@ -772,6 +773,36 @@ export async function getProduct(productId: string): Promise<ProductAllData | nu
         return responseData.results[0] === undefined ? null : responseData.results[0];
     } catch (error) {
         throw new Error(CT_NETWORK_PROBLEM);
+    }
+}
+
+export async function getProductDetails(productId: string): Promise<ProductSingle> {
+    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/products/${productId}`;
+
+    const bearerToken = await fetchBearerToken();
+
+    if (bearerToken === null) {
+        throw new Error(CT_ERROR);
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${bearerToken}`
+            }
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error("Couldn't fetch the product");
+        } 
+
+        return responseData as ProductSingle;
+    } catch (error) {
+        throw new Error(`Error when fetching product details: ${error}`);
     }
 }
 

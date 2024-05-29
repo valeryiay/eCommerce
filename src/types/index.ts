@@ -1,3 +1,9 @@
+interface BreadcrumbItem {
+    title: string;
+    disabled: boolean;
+    href: string;
+}
+
 type Address = {
     readonly id?: string;
     streetName: string;
@@ -124,6 +130,36 @@ type ProductAllData = {
     };
 };
 
+interface ProductSingle {
+    id: string;
+    version: number;
+    masterData: {
+        current: {
+            name: {
+                "en-GB": string;
+            };
+            description: {
+                "en-GB": string;
+            };
+            masterVariant: {
+                prices: {
+                    value: {
+                        currencyCode: string;
+                        centAmount: number;
+                    }
+                }[];
+                images: {
+                    url: string;
+                    dimensions: {
+                        w: number;
+                        h: number;
+                    }
+                }[];
+            };
+        }
+    }
+}
+
 type ProductApiResponse = {
     total: number;
     results: ProductAllData[];
@@ -210,6 +246,7 @@ type CartAPI = {
 };
 
 export type {
+    BreadcrumbItem,
     Address,
     TokenResponse,
     Customer,
@@ -221,6 +258,7 @@ export type {
     StateFields,
     Category,
     ProductAllData,
+    ProductSingle,
     ProductApiResponse,
     Cart,
     CartAPI

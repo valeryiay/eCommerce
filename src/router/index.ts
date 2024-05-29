@@ -8,6 +8,7 @@ import ContactsView from "@/views/ContactsView.vue";
 import LoginView from "@/views/LoginView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
 import RegistrationView from "@/views/RegistrationView.vue";
+import DetailedPageView from "@/views/DetailedPageView.vue";
 import { useAuthStore } from "@/store";
 
 const router = createRouter({
@@ -26,7 +27,12 @@ const router = createRouter({
                 {
                     path: "/products",
                     name: "products",
-                    component: ProductsView
+                    component: ProductsView,
+                },
+                {
+                    path: "/products/:id",
+                    name: "detailed",
+                    component: DetailedPageView
                 },
                 {
                     path: "/categories",
