@@ -10,6 +10,7 @@ import NotFoundView from "@/views/NotFoundView.vue";
 import RegistrationView from "@/views/RegistrationView.vue";
 import DetailedPageView from "@/views/DetailedPageView.vue";
 import { useAuthStore } from "@/store";
+import ProfileView from "@/views/ProfileView.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,6 +41,14 @@ const router = createRouter({
                     component: CategoriesView
                 },
                 {
+                    path: "/profile",
+                    name: "profile",
+                    component: ProfileView,
+                    meta: {
+                        requiresAuth: true
+                    }
+                },
+                {
                     path: "/contact",
                     name: "contact",
                     component: ContactsView
@@ -49,17 +58,14 @@ const router = createRouter({
                     name: "about",
                     component: AboutView
                 }
-            ],
-            meta: {
-                requiresAuth: false
-            }
+            ]
         },
         {
             path: "/login",
             name: "login",
             component: LoginView,
             meta: {
-                requiresNonLogin: true
+                requiresNoAuth: true
             }
         },
         {
@@ -67,7 +73,7 @@ const router = createRouter({
             name: "registration",
             component: RegistrationView,
             meta: {
-                requiresNonLogin: true
+                requiresNoAuth: true
             }
         },
         {
@@ -81,7 +87,11 @@ const router = createRouter({
 router.beforeEach((to) => {
     const authStore = useAuthStore();
 
-    if (to.meta.requiresNonLogin && authStore.isAuthorized) {
+    if (to.meta.requiresAuth && !authStore.isAuthorized) {
+        return { name: "login" };
+    }
+
+    if (to.meta.requiresNoAuth && authStore.isAuthorized) {
         return { name: "root" };
     }
 });

@@ -12,6 +12,18 @@ type Address = {
     country: string;
 };
 
+type FullCustomerAddress = {
+    city: string;
+    country: string;
+    firstName: string;
+    id: string;
+    lastName: string;
+    postalCode: string;
+    state: string;
+    streetName: string;
+    streetNumber: string;
+}
+
 type RegisterUser = {
     firstName: string;
     lastName: string;
@@ -248,6 +260,7 @@ type CartAPI = {
 export type {
     BreadcrumbItem,
     Address,
+    FullCustomerAddress,
     TokenResponse,
     Customer,
     Credentials,

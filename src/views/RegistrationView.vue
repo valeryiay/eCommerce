@@ -3,6 +3,7 @@
     import { registerUser, isUserExistWithEmail, isUserExistCheckCache } from "@/services/commercetoolsApi";
     import { ValidationRules } from "@/utils/validationRules";
     import { useAuthStore } from "@/store";
+    import { COUNTRIES } from "@/constants";
 
     export default {
         data: () => ({
@@ -27,22 +28,13 @@
                 billingAddressCountry: "",
                 isBillingAddressDefault: true
             } as RegisterUser,
+
             isUsingShippingAddressAsBillingAlso: true,
             loading: false,
             showErrorAlert: false,
             errorAlertMessage: "",
             commonRules: ValidationRules,
-
-            countries: [
-                {
-                    title: "United Kingdom (UK)",
-                    code: "UK"
-                },
-                {
-                    title: "Germany (DE)",
-                    code: "DE"
-                }
-            ],
+            countries: COUNTRIES,
 
             rules: {
                 noSpecialChar: (value: string) => /^[a-zA-Z\s]*$/.test(value) || "No special characters allowed",
@@ -85,7 +77,7 @@
                 }
 
                 const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, "0");
                 const day = String(date.getDate()).padStart(2, "0");
 
                 this.registerUserModel.dateOfBirth = `${year}-${month}-${day}`;
@@ -142,7 +134,7 @@
                 setTimeout(() => (this.loading = false), 3000);
             }
         }
-    }
+    };
 </script>
 
 <template>
