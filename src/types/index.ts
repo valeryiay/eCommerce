@@ -106,10 +106,14 @@ type Category = {
     ctId: string | null;
 };
 
+type StringDictionary = {
+    [key: string]: string;
+};
+
 type ProductAllData = {
     id: string;
-    name: string;
-    description: string;
+    name: StringDictionary;
+    description: StringDictionary;
     categories: string[];
     slug: string;
     masterVariant: {
