@@ -22,6 +22,11 @@
             } finally {
                 this.isLoading = false;
             }
+        },
+        methods: {
+            formatPrice(amount: number): string {
+                return (amount / 100).toFixed(2);
+            }
         }
     });
 </script>
@@ -35,7 +40,9 @@
         </v-row>
         <v-row>
             <v-col cols="12" class="text-center">
-                <v-alert v-if="isLoading" type="info">Loading...</v-alert>
+                <v-col cols="12" v-if="isLoading">
+                    <v-progress-circular indeterminate></v-progress-circular>
+                </v-col>
                 <v-alert v-if="errorMessage" type="error">{{ errorMessage }}</v-alert>
             </v-col>
         </v-row>
@@ -56,12 +63,40 @@
                                 : "Name Not Available"
                         }}
                     </v-card-title>
-                    <v-card-subtitle class="product-description">
+                    <v-card-text class="product-description">
                         {{
                             product.description && product.description["en-GB"]
                                 ? product.description["en-GB"]
                                 : "Description Not Available"
                         }}
+                    </v-card-text>
+                    <v-card-subtitle class="price">
+                        <div v-if="product.masterVariant.prices.length">
+                            <template v-if="product.masterVariant.prices[0].discounted">
+                                <span class="original-price">
+                                    €
+                                    {{
+                                        formatPrice(
+                                            product.masterVariant.prices[0].value.centAmount
+                                        )
+                                    }}
+                                </span>
+                                <span class="discounted-price">
+                                    €
+                                    {{
+                                        formatPrice(
+                                            product.masterVariant.prices[0].discounted.value
+                                                .centAmount
+                                        )
+                                    }}
+                                </span>
+                            </template>
+                            <template v-else>
+                                €
+                                {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
+                            </template>
+                        </div>
+                        <span v-else class="no-price"> No Price Available </span>
                     </v-card-subtitle>
                 </v-card>
             </v-col>
@@ -87,6 +122,11 @@
         overflow: hidden;
         background-color: #fff;
         transition: transform 0.2s;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
     }
 
     .product-card:hover {
@@ -109,6 +149,39 @@
     .product-description {
         font-size: 16px;
         color: #666666;
+        text-align: left;
+        margin-bottom: 10px;
+        flex-grow: 1;
+        height: 66px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .price {
+        font-size: 20px;
+        color: #099a9a;
+        margin-left: auto;
+        text-align: center;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #999;
+        margin-right: 10px;
+    }
+
+    .discounted-price {
+        font-size: 24px;
+        color: #e60000;
+        font-weight: bold;
+    }
+
+    .no-price {
+        font-size: 20px;
+        color: #999;
         text-align: center;
         margin-bottom: 20px;
     }
