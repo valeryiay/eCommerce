@@ -23,7 +23,7 @@ import type {
     ProductApiResponse,
     Cart,
     CartAPI,
-    IHash,
+    Dictionary,
     ProductSingle
 } from "../types";
 
@@ -143,7 +143,7 @@ async function getUserByEmail(email: string, bearerToken: string): Promise<Custo
     }
 }
 
-export const isUserExistCheckCache: IHash = {};
+export const isUserExistCheckCache: Dictionary<boolean> = {};
 
 export async function isUserExistWithEmail(email: string): Promise<boolean> {
     if (isUserExistCheckCache[email] !== undefined) {
@@ -798,7 +798,7 @@ export async function getProductDetails(productId: string): Promise<ProductSingl
 
         if (!response.ok) {
             throw new Error("Couldn't fetch the product");
-        } 
+        }
 
         return responseData as ProductSingle;
     } catch (error) {

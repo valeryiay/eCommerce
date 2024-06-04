@@ -1,19 +1,39 @@
 <script lang="ts">
     import { mergeProps } from "vue";
     import { useAuthStore } from "@/store";
-    import type { FullCustomerAddress } from "@/types";
+    import type { DateOfBirthFormat, FullCustomerAddress } from "@/types";
     import { COUNTRIES } from "@/constants";
+    import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
+    import { ValidationRules } from "@/utils/validationRules";
 
     export default {
         data: () => ({
             authStore: useAuthStore(),
-            customerTabs: null
+            customerTabs: null,
+            editGeneralDetails: {
+                isDialogOpen: false,
+                form: false,
+                loading: false,
+                isSubmitError: false,
+                errorMessage: "",
+                dateOfBirth: null as Date | null,
+                isDateOfBirthMenuOpen: false,
+                isPasswordVisible: false,
+            },
+            generalCustomerInfoModel: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                dateOfBirth: "",
+                password: ""
+            },
+            commonValidationRules: ValidationRules
         }),
         methods: {
             mergeProps,
-            formatDate(date: string): string {
+            formatBirthDate(date: string | null): string {
                 if (!date) {
-                    return "";
+                    return "N/A";
                 }
 
                 return new Date(date)
@@ -25,6 +45,69 @@
                 }
 
                 return "";
+            },
+            formatGeneralInfoModelDate (date: Date | null): string {
+                const formattedDateOfBirth: DateOfBirthFormat = formatDateOfBirth(date);
+
+                this.generalCustomerInfoModel.dateOfBirth = formattedDateOfBirth.serviceFormat;
+
+                return formattedDateOfBirth.uiFormat;
+            },
+            diffCustomerDetailsFieldsToUpdate(): string[] {
+                const diff: string[] = [];
+
+                if (this.generalCustomerInfoModel.firstName !== (this.authStore?.user?.user?.firstName || "")) {
+                    diff.push("firstName");
+                }
+
+                if (this.generalCustomerInfoModel.lastName !== (this.authStore?.user?.user?.lastName || "")) {
+                    diff.push("lastName");
+                }
+
+                if (this.generalCustomerInfoModel.email !== (this.authStore?.user?.user?.email || "")) {
+                    diff.push("email");
+                }
+
+                if (this.generalCustomerInfoModel.dateOfBirth !== (this.authStore?.user?.user?.dateOfBirth || "")) {
+                    diff.push("dateOfBirth");
+                }
+
+                if (this.generalCustomerInfoModel.password !== (this.authStore?.user?.user?.password || "")) {
+                    diff.push("password");
+                }
+
+                return diff;
+            },
+            onCustomerDetailsDialogOpen() {
+                this.generalCustomerInfoModel.firstName = this.authStore?.user?.user?.firstName || "";
+                this.generalCustomerInfoModel.lastName = this.authStore?.user?.user?.lastName || "";
+                this.generalCustomerInfoModel.email = this.authStore?.user?.user?.email || "";
+                this.generalCustomerInfoModel.password = this.authStore?.user?.user?.password || "";
+
+                this.generalCustomerInfoModel.dateOfBirth = this.authStore?.user?.user?.dateOfBirth || "";
+                this.editGeneralDetails.dateOfBirth = new Date(this.generalCustomerInfoModel.dateOfBirth);
+
+                this.editGeneralDetails.loading = false;
+                this.editGeneralDetails.isSubmitError = false;
+
+                this.editGeneralDetails.isDialogOpen = true;
+            },
+            async onCustomerDetailsFormSubmit() {
+                if (!this.editGeneralDetails.form) {
+                    return;
+                }
+
+                this.editGeneralDetails.loading = true;
+                this.editGeneralDetails.isSubmitError = false;
+
+                const formDiff = this.diffCustomerDetailsFieldsToUpdate();
+
+                if (formDiff.length === 0) {
+                    this.editGeneralDetails.loading = false;
+                    this.editGeneralDetails.isDialogOpen = false;
+
+                    return;
+                }
             }
         },
         computed: {
@@ -33,7 +116,7 @@
                     {
                         title: "Contact Name",
                         key: "contactName",
-                        value: (item: FullCustomerAddress) => `${item.firstName} ${item.lastName}`
+                        value: (item: FullCustomerAddress) => `${ item.firstName } ${ item.lastName }`
                     },
                     {
                         title: "Country",
@@ -52,13 +135,13 @@
                         title: "City",
                         key: "city",
                         value: (item: FullCustomerAddress) =>
-                            `${item.city || ""}${item.state ? "," : ""} ${item.state || ""}`
+                            `${ item.city || "" }${ item.state ? "," : "" } ${ item.state || "" }`
                     },
                     {
                         title: "Address",
                         key: "address",
                         value: (item: FullCustomerAddress) =>
-                            `${item.streetName} ${item.streetNumber}`
+                            `${ item.streetName } ${ item.streetNumber }`
                     },
                     { title: "Postal Code", value: "postalCode" },
                     {
@@ -83,6 +166,9 @@
                         }
                     }
                 ];
+            },
+            computedGeneralInfoModelDateFormatted(): string {
+                return this.formatGeneralInfoModelDate(this.editGeneralDetails.dateOfBirth);
             }
         }
     };
@@ -115,6 +201,7 @@
                                 </v-avatar>
                             </v-card>
                         </v-col>
+
                         <v-col>
                             <h2 class="text-h4 font-weight-black">{{ authStore?.user?.user?.firstName }} {{ authStore?.user?.user?.lastName }}</h2>
                             <p
@@ -122,9 +209,160 @@
                                 class="text-h6"
                             >
                                 <v-icon icon="mdi-cake-layered"></v-icon>
-                                <span class="birthday-text ml-2">Cake Day: {{ formatDate(authStore?.user?.user?.dateOfBirth || "") || "N/A" }}</span>
+                                <span class="birthday-text ml-2">Cake Day: {{ formatBirthDate(authStore?.user?.user?.dateOfBirth) }}</span>
                             </p>
                         </v-col>
+
+                        <v-btn
+                            @click="onCustomerDetailsDialogOpen()"
+                            class="text-none font-weight-regular mt-3 mr-3"
+                            prepend-icon="mdi-account"
+                            variant="tonal"
+                            text="Edit Profile"
+                        ></v-btn>
+
+                        <v-dialog
+                            v-model="editGeneralDetails.isDialogOpen"
+                            max-width="600"
+                        >
+                            <v-form v-model="editGeneralDetails.form" @submit.prevent="onCustomerDetailsFormSubmit">
+                                <v-card
+                                    prepend-icon="mdi-account"
+                                    title="User Profile"
+                                >
+                                    <v-card-text>
+                                        <v-row dense>
+                                            <v-col cols="12" md="4" sm="6">
+                                                <v-text-field
+                                                    v-model="generalCustomerInfoModel.firstName"
+                                                    :rules="[
+                                                        commonValidationRules.required,
+                                                        commonValidationRules.noLeadingTrailingWhitespace,
+                                                        commonValidationRules.noSpecialChar,
+                                                        commonValidationRules.minLength(2, 'First name must be at least 2 character long')
+                                                    ]"
+                                                    label="First name*"
+                                                    required
+                                                    clearable
+                                                ></v-text-field>
+                                            </v-col>
+
+                                            <v-col cols="12" md="4" sm="6">
+                                                <v-text-field
+                                                    v-model="generalCustomerInfoModel.lastName"
+                                                    :rules="[
+                                                        commonValidationRules.required,
+                                                        commonValidationRules.noLeadingTrailingWhitespace,
+                                                        commonValidationRules.noSpecialChar,
+                                                        commonValidationRules.minLength(2, 'Last name must be at least 2 character long')
+                                                    ]"
+                                                    label="Last name*"
+                                                    required
+                                                    clearable
+                                                ></v-text-field>
+                                            </v-col>
+
+                                            <v-col cols="12" md="4" sm="6">
+                                                <v-menu
+                                                    v-model="editGeneralDetails.isDateOfBirthMenuOpen"
+                                                    :close-on-content-click="false"
+                                                    transition="scale-transition"
+                                                >
+                                                    <template v-slot:activator="{ props }">
+                                                        <v-text-field
+                                                            v-model="computedGeneralInfoModelDateFormatted"
+                                                            v-bind="props"
+                                                            :rules="[commonValidationRules.required, commonValidationRules.ageLimit]"
+                                                            label="Day of Birth*"
+                                                            readonly
+                                                        >
+                                                        </v-text-field>
+                                                    </template>
+                                                    <v-date-picker v-model="editGeneralDetails.dateOfBirth"></v-date-picker>
+                                                </v-menu>
+                                            </v-col>
+                                        </v-row>
+
+                                        <v-row dense>
+                                            <v-col cols="8" md="8" sm="6">
+                                                <v-text-field
+                                                    v-model="generalCustomerInfoModel.email"
+                                                    :rules="[
+                                                        commonValidationRules.required,
+                                                        commonValidationRules.isProperEmail,
+                                                        commonValidationRules.isEmailWithDomain,
+                                                        commonValidationRules.noLeadingTrailingWhitespace,
+                                                        commonValidationRules.isEmailProperlyFormatted
+                                                    ]"
+                                                    label="Email*"
+                                                    required
+                                                    clearable
+                                                ></v-text-field>
+                                            </v-col>
+
+                                            <v-col cols="4" md="4" sm="6">
+                                                <v-text-field
+                                                    v-model="generalCustomerInfoModel.password"
+                                                    :rules="[
+                                                        commonValidationRules.required,
+                                                        commonValidationRules.minLength(8, 'Min 8 characters'),
+                                                        commonValidationRules.minOneDigit,
+                                                        commonValidationRules.minOneLowerCase,
+                                                        commonValidationRules.minOneUpperCase,
+                                                        commonValidationRules.minOneSpecialChar,
+                                                        commonValidationRules.noLeadingTrailingWhitespace
+                                                    ]"
+                                                    label="Password*"
+                                                    :append-inner-icon="editGeneralDetails.isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
+                                                    :type="editGeneralDetails.isPasswordVisible ? 'text' : 'password'"
+                                                    @click:append-inner="editGeneralDetails.isPasswordVisible = !editGeneralDetails.isPasswordVisible"
+                                                    required
+                                                    clearable
+                                                ></v-text-field>
+                                            </v-col>
+                                        </v-row>
+
+                                        <small class="text-caption text-medium-emphasis">*indicates required field</small>
+                                    </v-card-text>
+
+                                    <v-divider v-if="editGeneralDetails.isSubmitError"></v-divider>
+
+                                    <v-card
+                                        v-if="editGeneralDetails.isSubmitError"
+                                        class="mb-10 text-center"
+                                        color="surface-variant"
+                                        variant="tonal"
+                                    >
+                                        <v-card-text class="text-medium-emphasis text-error font-weight-bold">
+                                            <h1>Unable to submit form</h1>
+                                            <p>The information you entered is incomplete or invalid.</p>
+                                            <br>
+                                            <p v-if="editGeneralDetails.errorMessage">For geeks: {{ editGeneralDetails.errorMessage }}</p>
+                                        </v-card-text>
+                                    </v-card>
+
+                                    <v-divider></v-divider>
+
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
+                                        <v-btn
+                                            text="Close"
+                                            variant="plain"
+                                            @click="editGeneralDetails.isDialogOpen = false"
+                                        ></v-btn>
+
+                                        <v-btn
+                                            :disabled="!editGeneralDetails.form"
+                                            :loading="editGeneralDetails.loading"
+                                            type="submit"
+                                            color="primary"
+                                            text="Save"
+                                            variant="tonal"
+                                        ></v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-form>
+                        </v-dialog>
                     </v-row>
                 </v-sheet>
             </v-col>
@@ -141,18 +379,12 @@
                         slider-color="#f78166"
                         align-tabs="center"
                     >
-                        <v-tab value="general">General</v-tab>
                         <v-tab value="addresses">Addresses</v-tab>
                         <v-tab value="orders">Orders</v-tab>
                     </v-tabs>
                     <v-tabs-window
                         v-model="customerTabs"
                     >
-                        <v-tabs-window-item value="general">
-                            <v-card>
-                                <v-card-text>General info and edit</v-card-text>
-                            </v-card>
-                        </v-tabs-window-item>
                         <v-tabs-window-item value="addresses">
                             <v-card>
                                 <v-data-table

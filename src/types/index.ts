@@ -90,9 +90,14 @@ type Credentials = {
     password: string;
 };
 
-interface IHash {
-    [key: string]: boolean;
+interface Dictionary<T> {
+    [key: string]: T;
 };
+
+interface DateOfBirthFormat {
+    serviceFormat: string,
+    uiFormat: string
+}
 
 type StateFields = {
     customer?: null | CustomerWithToken;
@@ -106,14 +111,10 @@ type Category = {
     ctId: string | null;
 };
 
-type StringDictionary = {
-    [key: string]: string;
-};
-
 type ProductAllData = {
     id: string;
-    name: StringDictionary;
-    description: StringDictionary;
+    name: Dictionary<string>;
+    description: Dictionary<string>;
     categories: string[];
     slug: string;
     masterVariant: {
@@ -268,7 +269,8 @@ export type {
     TokenResponse,
     Customer,
     Credentials,
-    IHash,
+    DateOfBirthFormat,
+    Dictionary,
     CustomerWithToken,
     RegisterUser,
     CreateUser,

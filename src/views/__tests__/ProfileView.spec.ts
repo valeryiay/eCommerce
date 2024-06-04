@@ -3,7 +3,6 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import vuetify from "@/plugins/vuetify";
 import router from "@/router";
 import ProfileView from "../ProfileView.vue";
-import { useAuthStore } from "@/store";
 
 global.ResizeObserver = require("resize-observer-polyfill");
 

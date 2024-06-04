@@ -63,7 +63,7 @@
                             commonValidationRules.isProperEmail,
                             commonValidationRules.isEmailWithDomain,
                             commonValidationRules.noLeadingTrailingWhitespace,
-                            commonValidationRules.isProperlyFormatted
+                            commonValidationRules.isEmailProperlyFormatted
                         ]"
                         density="compact"
                         placeholder="Email address"
