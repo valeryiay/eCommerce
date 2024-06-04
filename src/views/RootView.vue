@@ -19,7 +19,7 @@
                 return `${firstName} ${lastName}`;
             }
         }
-    }
+    };
 </script>
 
 <template>
@@ -58,7 +58,7 @@
                                         height="44"
                                         alt="Default profile image"
                                         src="@/assets/img/default-avatar.svg"
-                                    >
+                                    />
                                 </v-avatar>
                                 <v-card-text>
                                     <span id="customer-greeting" class="text-body-1">Hi, {{ getFullCustomerName }}!</span>
@@ -100,36 +100,41 @@
 </template>
 
 <style scoped>
-    .app-bar {
-        padding-left: 250px;
-    }
+    @media only screen and (max-width: 600px) {
+        .app-bar {
+            padding-left: 0;
+        }
 
-    .app-bar-title {
-        margin-inline-start: 0 !important;
-        flex: 0.3;
-        min-width: 150px;
-    }
+        .app-bar-title {
+            margin-right: 0;
+        }
 
-    .user-container {
-        margin-right: 250px;
-    }
+        .user-container {
+            margin-right: 0;
+        }
 
-    #customer-greeting {
-        position: relative;
-        bottom: -1px;
-    }
+        #customer-greeting {
+            position: relative;
+            bottom: -1px;
+        }
 
-    .main {
-        min-height: 300px;
-    }
+        .main {
+            min-height: 300px;
+        }
 
-    .footer {
-        padding-left: 250px;
-        padding-right: 250px;
-    }
+        .footer {
+            padding-left: 0;
+            padding-right: 0;
+        }
 
-    .page-content-margin {
-        margin-left: 250px;
-        margin-right: 250px;
+        .page-content-margin {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+    @media only screen and (max-width: 400px) {
+        .app-bar-title {
+            flex: 1;
+        }
     }
 </style>
