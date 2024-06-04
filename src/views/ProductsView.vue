@@ -96,6 +96,9 @@
             formatPrice(amount: number): string {
                 return (amount / 100).toFixed(2);
             },
+            goToDetailedProduct(productId: string) {
+                this.$router.push({ name: "detailed", params: { id: productId } });
+            },
             applyFilters() {},
             resetFilters() {
                 this.filters = {
@@ -185,7 +188,7 @@
                         md="4"
                         lg="3"
                     >
-                        <v-card class="product-card" elevation="2">
+                        <v-card class="product-card" elevation="2" @click="goToDetailedProduct(product.id)">
                             <v-img
                                 v-if="product.masterVariant.images.length"
                                 :src="product.masterVariant.images[0].url"
