@@ -31,6 +31,11 @@
 
                     return priceObj ? (priceObj.value.centAmount / 100).toFixed(2) : "N/A";
                 },
+                getDiscount(): string {
+                    const discountPrice = this.product?.masterData?.current?.masterVariant?.prices[0]?.discounted.value.centAmount;
+
+                    return discountPrice ? (discountPrice / 100).toFixed(2) : "N/A";
+                },
                 showOverlay(index: number) {
                     this.currentImageIndex = index;
                     this.overlayVisible = true;
@@ -92,9 +97,15 @@
             <v-col>
                 <v-row class="justify-space-between pa-5">
                     <h2>{{ product.masterData?.current?.name['en-GB'] }}</h2>
-                    <h2>
-                        € {{ getPrice('EUR') }}
-                    </h2>  
+                    <div v-if="product.masterData?.current.masterVariant.prices[0]?.discounted">
+                        <h2>
+                            <span class="discounted-price pr-5">€ {{ getDiscount() }}</span>
+                            <span class="original-price">€ {{ getPrice('EUR') }}</span>
+                        </h2>
+                    </div>
+                    <div v-else>
+                        <h2>€ {{ getPrice('EUR') }}</h2>
+                    </div>  
                 </v-row>
                 <v-row class="pa-5">
                     <p>{{ product.masterData?.current?.description['en-GB'] }}</p>
@@ -126,6 +137,15 @@
 .wrapper-container {
     overflow-x: hidden;
     max-width: 1600px;
+    font-family: Poppins, sans-serif;
+}
+
+h2 {
+    color: #099a9a;
+}
+
+p {
+    font-size: large;
 }
 
 .carousel-item {
@@ -141,6 +161,19 @@
     max-height: 100%;
     object-fit: contain;
     cursor: pointer;
+}
+
+.discounted-price {
+    font-size: 24px;
+    color: #e60000;
+    font-weight: bold;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #999;
+    margin-right: 10px;
+    font-size: 22px;
 }
 
 .overlay-content {

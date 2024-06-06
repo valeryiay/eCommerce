@@ -163,6 +163,12 @@ interface ProductSingle {
                     value: {
                         currencyCode: string;
                         centAmount: number;
+                    },
+                    discounted: {
+                        value: {
+                            currencyCode: string;
+                            centAmount: number;
+                        }
                     }
                 }[];
                 images: {
