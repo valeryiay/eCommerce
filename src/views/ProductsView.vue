@@ -18,6 +18,7 @@
                     size: null as string | null,
                     sortBy: "price_desc"
                 },
+                searchQuery: "",
                 brands: [] as string[],
                 colors: [] as string[],
                 sizes: [] as string[],
@@ -90,13 +91,17 @@
                     const productSize = product.masterVariant.attributes.find(
                         (attr) => attr.name === "size"
                     )?.value.key;
+                    const matchesSearchQuery = product.description?.["en-GB"]
+                        .toLowerCase()
+                        .includes(this.searchQuery.toLowerCase());
 
                     return (
                         (!minPrice || price >= minPrice * 100) &&
                         (!maxPrice || price <= maxPrice * 100) &&
                         (!brand || productBrand === brand) &&
                         (!color || productColor === color) &&
-                        (!size || productSize === size)
+                        (!size || productSize === size) &&
+                        matchesSearchQuery
                     );
                 })
                 .sort((a, b) => {
@@ -149,6 +154,7 @@
                     sortBy: "price_desc"
                 };
                 this.applyFilters();
+                this.searchQuery = "";
             },
             clearFilters() {
                 this.filters.sortBy = "price_desc";
@@ -174,6 +180,34 @@
         </v-row>
         <v-row>
             <v-col cols="12" md="3">
+                <v-card class="filter-card">
+                    <v-card-title>Search</v-card-title>
+                    <v-card-text>
+                        <v-text-field
+                            v-model="searchQuery"
+                            label="Search Products"
+                            prepend-icon="mdi-magnify"
+                            @change="applyFilters"
+                            @click:clear="resetFilters"
+                            clearable
+                        ></v-text-field>
+                        <span v-if="filteredProducts.length">
+                            {{ filteredProducts.length }} Products Found
+                        </span>
+                    </v-card-text>
+                </v-card>
+                <v-card class="filter-card">
+                    <v-card-title>Sorting</v-card-title>
+                    <v-card-text>
+                        <v-select
+                            v-model="filters.sortBy"
+                            :items="sortOptions"
+                            label="Sort By"
+                            @change="applyFilters"
+                            @click:clear="clearFilters">
+                        </v-select>
+                    </v-card-text>
+                </v-card>
                 <v-card class="filter-card">
                     <v-card-title>Filters</v-card-title>
                     <v-card-text>
@@ -210,13 +244,6 @@
                             @change="applyFilters"
                             clearable
                         ></v-select>
-                        <v-select
-                            v-model="filters.sortBy"
-                            :items="sortOptions"
-                            label="Sort By"
-                            @change="applyFilters"
-                            @click:clear="clearFilters">
-                        </v-select>
                         <v-btn @click="resetFilters">Reset Filters</v-btn>
                     </v-card-text>
                 </v-card>
