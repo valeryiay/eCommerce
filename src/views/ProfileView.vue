@@ -1,10 +1,11 @@
 <script lang="ts">
     import { mergeProps } from "vue";
-    import { useAuthStore } from "@/store";
-    import type { DateOfBirthFormat, FullCustomerAddress } from "@/types";
+    import type { Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress } from "@/types";
     import { COUNTRIES } from "@/constants";
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
+    import { useAuthStore } from "@/store";
+    import { changePassword, updateUser } from "@/services/commercetoolsApi";
 
     export default {
         data: () => ({
@@ -18,14 +19,19 @@
                 errorMessage: "",
                 dateOfBirth: null as Date | null,
                 isDateOfBirthMenuOpen: false,
-                isPasswordVisible: false,
+                isCurrPasswordVisible: false,
+                isCurrPasswordInvalid: false,
+                isCurrPasswordInputFocused: false,
+                isNewPasswordVisible: false,
+                isOperationSuccessDisplayed: false
             },
             generalCustomerInfoModel: {
                 firstName: "",
                 lastName: "",
                 email: "",
                 dateOfBirth: "",
-                password: ""
+                currPassword: "",
+                newPassword: ""
             },
             commonValidationRules: ValidationRules
         }),
@@ -53,27 +59,48 @@
 
                 return formattedDateOfBirth.uiFormat;
             },
-            diffCustomerDetailsFieldsToUpdate(): string[] {
-                const diff: string[] = [];
+            diffCustomerDetailsFieldsToUpdate(): any[] {
+                const diff = [];
 
                 if (this.generalCustomerInfoModel.firstName !== (this.authStore?.user?.user?.firstName || "")) {
-                    diff.push("firstName");
+                    diff.push({
+                        action: "setFirstName",
+                        firstName: this.generalCustomerInfoModel.firstName
+                    });
                 }
 
                 if (this.generalCustomerInfoModel.lastName !== (this.authStore?.user?.user?.lastName || "")) {
-                    diff.push("lastName");
-                }
-
-                if (this.generalCustomerInfoModel.email !== (this.authStore?.user?.user?.email || "")) {
-                    diff.push("email");
+                    diff.push({
+                        action: "setLastName",
+                        lastName: this.generalCustomerInfoModel.lastName
+                    });
                 }
 
                 if (this.generalCustomerInfoModel.dateOfBirth !== (this.authStore?.user?.user?.dateOfBirth || "")) {
-                    diff.push("dateOfBirth");
+                    diff.push({
+                        action: "setDateOfBirth",
+                        dateOfBirth: this.generalCustomerInfoModel.dateOfBirth
+                    });
                 }
 
-                if (this.generalCustomerInfoModel.password !== (this.authStore?.user?.user?.password || "")) {
-                    diff.push("password");
+                return diff;
+            },
+            diffCustomerEmailAndPasswordToUpdate(): any[] {
+                const diff = [];
+
+                if (this.generalCustomerInfoModel.email !== (this.authStore?.user?.user?.email || "")) {
+                    diff.push({
+                        action: "changeEmail",
+                        email: this.generalCustomerInfoModel.email
+                    });
+                }
+
+                if (this.generalCustomerInfoModel.newPassword !== (this.authStore?.user?.user?.password || "")) {
+                    diff.push({
+                        action: "changePassword",
+                        password: this.generalCustomerInfoModel.currPassword,
+                        passwordNew: this.generalCustomerInfoModel.newPassword
+                    });
                 }
 
                 return diff;
@@ -82,15 +109,34 @@
                 this.generalCustomerInfoModel.firstName = this.authStore?.user?.user?.firstName || "";
                 this.generalCustomerInfoModel.lastName = this.authStore?.user?.user?.lastName || "";
                 this.generalCustomerInfoModel.email = this.authStore?.user?.user?.email || "";
-                this.generalCustomerInfoModel.password = this.authStore?.user?.user?.password || "";
+                this.generalCustomerInfoModel.newPassword = this.authStore?.user?.user?.password || "";
+                this.generalCustomerInfoModel.currPassword = "";
 
                 this.generalCustomerInfoModel.dateOfBirth = this.authStore?.user?.user?.dateOfBirth || "";
                 this.editGeneralDetails.dateOfBirth = new Date(this.generalCustomerInfoModel.dateOfBirth);
+
+                this.editGeneralDetails.isCurrPasswordVisible = false;
+                this.editGeneralDetails.isNewPasswordVisible = false;
+                this.editGeneralDetails.isNewPasswordVisible = false;
 
                 this.editGeneralDetails.loading = false;
                 this.editGeneralDetails.isSubmitError = false;
 
                 this.editGeneralDetails.isDialogOpen = true;
+            },
+            onCustomerDetailsPasswordInput() {
+                if (this.editGeneralDetails.isCurrPasswordInvalid) {
+                    this.editGeneralDetails.isCurrPasswordInvalid = false;
+                    this.editGeneralDetails.isSubmitError = false;
+                    this.editGeneralDetails.errorMessage = "";
+                }
+            },
+            displayOperationSuccess() {
+                this.editGeneralDetails.isOperationSuccessDisplayed = true;
+
+                setTimeout(() => {
+                    this.editGeneralDetails.isOperationSuccessDisplayed = false;
+                }, 5000);
             },
             async onCustomerDetailsFormSubmit() {
                 if (!this.editGeneralDetails.form) {
@@ -100,13 +146,99 @@
                 this.editGeneralDetails.loading = true;
                 this.editGeneralDetails.isSubmitError = false;
 
-                const formDiff = this.diffCustomerDetailsFieldsToUpdate();
+                const formGeneralDetailsDiff = this.diffCustomerDetailsFieldsToUpdate();
+                const formLoginAndPasswordDiff = this.diffCustomerEmailAndPasswordToUpdate();
 
-                if (formDiff.length === 0) {
+                if (formGeneralDetailsDiff.length === 0 && formLoginAndPasswordDiff.length == 0) {
                     this.editGeneralDetails.loading = false;
-                    this.editGeneralDetails.isDialogOpen = false;
 
                     return;
+                }
+
+                try {
+                    const { id, version } = this.authStore.user!.user!;
+                    const { cart, token} = this.authStore.user!;
+
+                    // General details update, like First Name, Last Name, Bay of Birth
+                    if (formGeneralDetailsDiff.length !== 0) {
+                        const updatedUserData: Customer | Error = await updateUser(formGeneralDetailsDiff, id, token.access_token, version);
+
+                        if (updatedUserData instanceof Error) {
+                            throw new Error(updatedUserData.message);
+                        }
+
+                        this.authStore.updateUserData({ user: updatedUserData, cart: cart!, token: token });
+                    }
+
+                    // Login and password update
+                    if (formLoginAndPasswordDiff.length !== 0) {
+                        // See if credential are valid
+                        const isValidCredentials = await this.authStore.isValidCredentials({
+                            email: this.authStore.user!.user!.email,
+                            password: this.generalCustomerInfoModel.currPassword
+                        });
+
+                        if (!isValidCredentials) {
+                            this.editGeneralDetails.isCurrPasswordInvalid = true;
+                            this.editGeneralDetails.form = false;
+
+                            // Toggle focus
+                            this.editGeneralDetails.isCurrPasswordInputFocused = true;
+                            setTimeout(() => {
+                                this.editGeneralDetails.isCurrPasswordInputFocused = false;
+                            }, 200);
+
+                            throw new Error("Current Password is invalid");
+                        }
+
+                        // If email up to update, update it first
+                        const emailObj = formLoginAndPasswordDiff.find((item) => item.action === "changeEmail");
+
+                        if (emailObj) {
+                            const updatedUserData: Customer | Error = await updateUser(
+                                [{ action: `${ emailObj.action }`, email: `${ emailObj.email }` }],
+                                id,
+                                token.access_token,
+                                version
+                            );
+
+                            if (updatedUserData instanceof Error) {
+                                throw new Error(updatedUserData.message);
+                            }
+
+                            this.authStore.updateUserData({ user: updatedUserData, cart: cart!, token: token });
+                        }
+
+                        // Next up is the password to update, if present
+                        const passwordObj = formLoginAndPasswordDiff.find((item) => item.action === "changePassword");
+
+                        if (passwordObj) {
+                            const updatedUserData: CustomerWithToken | Error = await changePassword(
+                                { password: `${ passwordObj.password }`, passwordNew: `${ passwordObj.passwordNew }` },
+                                this.generalCustomerInfoModel.email,
+                                id,
+                                token.access_token,
+                                version
+                            );
+
+                            if (updatedUserData instanceof Error) {
+                                throw new Error(updatedUserData.message);
+                            }
+
+                            this.authStore.updateUserData(updatedUserData);
+                        }
+                    }
+
+                    this.editGeneralDetails.loading = false;
+                    this.displayOperationSuccess();
+                }
+                catch (error) {
+                    this.editGeneralDetails.isSubmitError = true;
+                    this.editGeneralDetails.errorMessage = String(error);
+
+                    setTimeout(() => {
+                        this.editGeneralDetails.loading = false;
+                    }, 500);
                 }
             }
         },
@@ -169,6 +301,16 @@
             },
             computedGeneralInfoModelDateFormatted(): string {
                 return this.formatGeneralInfoModelDate(this.editGeneralDetails.dateOfBirth);
+            },
+            computedIsNewPasswordRequired(): boolean {
+                return this.generalCustomerInfoModel.newPassword !== this.authStore!.user!.user!.password;
+            },
+            computedIsCustomerGeneralDataChanged(): boolean {
+                return this.generalCustomerInfoModel.firstName !== this.authStore!.user!.user!.firstName ||
+                       this.generalCustomerInfoModel.lastName !== this.authStore!.user!.user!.lastName ||
+                       this.generalCustomerInfoModel.dateOfBirth !== this.authStore!.user!.user!.dateOfBirth ||
+                       this.generalCustomerInfoModel.email !== this.authStore!.user!.user!.email ||
+                       this.generalCustomerInfoModel.newPassword !== this.authStore!.user!.user!.password;
             }
         }
     };
@@ -178,9 +320,9 @@
     <v-container fluid>
         <v-row>
             <v-col>
-                <v-sheet rounded="lg" class="">
+                <v-sheet rounded="lg">
                     <v-row>
-                        <v-col cols="2" class="customer-avatar-column">
+                        <v-col cols="1" class="customer-avatar-column">
                             <v-card
                                 min-width="200"
                                 min-height="200"
@@ -241,7 +383,7 @@
                                                         commonValidationRules.noSpecialChar,
                                                         commonValidationRules.minLength(2, 'First name must be at least 2 character long')
                                                     ]"
-                                                    label="First name*"
+                                                    label="First name"
                                                     required
                                                     clearable
                                                 ></v-text-field>
@@ -256,7 +398,7 @@
                                                         commonValidationRules.noSpecialChar,
                                                         commonValidationRules.minLength(2, 'Last name must be at least 2 character long')
                                                     ]"
-                                                    label="Last name*"
+                                                    label="Last name"
                                                     required
                                                     clearable
                                                 ></v-text-field>
@@ -273,7 +415,7 @@
                                                             v-model="computedGeneralInfoModelDateFormatted"
                                                             v-bind="props"
                                                             :rules="[commonValidationRules.required, commonValidationRules.ageLimit]"
-                                                            label="Day of Birth*"
+                                                            label="Day of Birth"
                                                             readonly
                                                         >
                                                         </v-text-field>
@@ -294,7 +436,7 @@
                                                         commonValidationRules.noLeadingTrailingWhitespace,
                                                         commonValidationRules.isEmailProperlyFormatted
                                                     ]"
-                                                    label="Email*"
+                                                    label="Email"
                                                     required
                                                     clearable
                                                 ></v-text-field>
@@ -302,8 +444,8 @@
 
                                             <v-col cols="4" md="4" sm="6">
                                                 <v-text-field
-                                                    v-model="generalCustomerInfoModel.password"
-                                                    :rules="[
+                                                    v-model="generalCustomerInfoModel.newPassword"
+                                                    :rules="computedIsNewPasswordRequired ? [
                                                         commonValidationRules.required,
                                                         commonValidationRules.minLength(8, 'Min 8 characters'),
                                                         commonValidationRules.minOneDigit,
@@ -311,18 +453,46 @@
                                                         commonValidationRules.minOneUpperCase,
                                                         commonValidationRules.minOneSpecialChar,
                                                         commonValidationRules.noLeadingTrailingWhitespace
-                                                    ]"
-                                                    label="Password*"
-                                                    :append-inner-icon="editGeneralDetails.isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
-                                                    :type="editGeneralDetails.isPasswordVisible ? 'text' : 'password'"
-                                                    @click:append-inner="editGeneralDetails.isPasswordVisible = !editGeneralDetails.isPasswordVisible"
+                                                    ] : []"
+                                                    label="Password"
+                                                    :append-inner-icon="editGeneralDetails.isNewPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
+                                                    :type="editGeneralDetails.isNewPasswordVisible ? 'text' : 'password'"
+                                                    @click:append-inner="editGeneralDetails.isNewPasswordVisible = !editGeneralDetails.isNewPasswordVisible"
                                                     required
                                                     clearable
                                                 ></v-text-field>
                                             </v-col>
                                         </v-row>
 
-                                        <small class="text-caption text-medium-emphasis">*indicates required field</small>
+                                        <v-row dense>
+                                            <v-col cols="12" md="8" sm="6">
+                                                <v-text-field
+                                                    v-if="diffCustomerEmailAndPasswordToUpdate().length > 0"
+                                                    v-model="generalCustomerInfoModel.currPassword"
+                                                    :rules="[
+                                                        commonValidationRules.required,
+                                                        commonValidationRules.minLength(8, 'Min 8 characters'),
+                                                        commonValidationRules.minOneDigit,
+                                                        commonValidationRules.minOneLowerCase,
+                                                        commonValidationRules.minOneUpperCase,
+                                                        commonValidationRules.minOneSpecialChar,
+                                                        commonValidationRules.noLeadingTrailingWhitespace,
+                                                        () => !editGeneralDetails.isCurrPasswordInvalid || 'Provided Password is invalid'
+                                                    ]"
+                                                    :append-inner-icon="editGeneralDetails.isCurrPasswordVisible ? 'mdi-eye-off' : 'mdi-eye'"
+                                                    :type="editGeneralDetails.isCurrPasswordVisible ? 'text' : 'password'"
+                                                    :focused="editGeneralDetails.isCurrPasswordInputFocused"
+                                                    hint="Required if you want to change the e-mail address or specify a new password"
+                                                    @click:append-inner="editGeneralDetails.isCurrPasswordVisible = !editGeneralDetails.isCurrPasswordVisible"
+                                                    @keyup="onCustomerDetailsPasswordInput"
+                                                    label="Current Password"
+                                                    persistent-hint
+                                                    required
+                                                    clearable
+                                                >
+                                                </v-text-field>
+                                            </v-col>
+                                        </v-row>
                                     </v-card-text>
 
                                     <v-divider v-if="editGeneralDetails.isSubmitError"></v-divider>
@@ -337,14 +507,24 @@
                                             <h1>Unable to submit form</h1>
                                             <p>The information you entered is incomplete or invalid.</p>
                                             <br>
-                                            <p v-if="editGeneralDetails.errorMessage">For geeks: {{ editGeneralDetails.errorMessage }}</p>
+                                            <p v-if="editGeneralDetails.errorMessage">For geeks, {{ editGeneralDetails.errorMessage }}</p>
                                         </v-card-text>
                                     </v-card>
 
                                     <v-divider></v-divider>
 
                                     <v-card-actions>
+                                        <v-chip
+                                            v-if="editGeneralDetails.isOperationSuccessDisplayed"
+                                            color="teal"
+                                            class="float-start"
+                                            prepend-icon="mdi-checkbox-marked-circle"
+                                        >
+                                            Saved Successfully
+                                        </v-chip>
+
                                         <v-spacer></v-spacer>
+
                                         <v-btn
                                             text="Close"
                                             variant="plain"
@@ -352,7 +532,7 @@
                                         ></v-btn>
 
                                         <v-btn
-                                            :disabled="!editGeneralDetails.form"
+                                            :disabled="!computedIsCustomerGeneralDataChanged || !editGeneralDetails.form"
                                             :loading="editGeneralDetails.loading"
                                             type="submit"
                                             color="primary"
