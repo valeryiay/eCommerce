@@ -44,9 +44,9 @@
             computed: {
                 breadcrumbItems(): BreadcrumbItem[] { 
                     return [
-                        { title: 'Home', disabled: false, href: '/' },
-                        { title: 'Products', disabled: false, href: '/products'},
-                        { title: this.product.masterData?.current?.name['en-GB'] || 'Detailed product', disabled: true, href: ''}
+                        { title: "Home", disabled: false, to:{ name: "home" } },
+                        { title: "Products", disabled: false, to:{ name: "products" } },
+                        { title: this.product.masterData?.current?.name["en-GB"] || "Detailed product", disabled: true, to: ""}
                     ]
                 },
                 largeImages() {

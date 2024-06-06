@@ -1,7 +1,9 @@
+import type { RouteLocationRaw } from "vue-router";
+
 interface BreadcrumbItem {
     title: string;
     disabled: boolean;
-    href: string;
+    to: RouteLocationRaw;
 }
 
 type Address = {
