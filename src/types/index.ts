@@ -262,6 +262,11 @@ type CartAPI = {
     results: Cart[];
 };
 
+interface SelectOption {
+    title: string;
+    value: string;
+}
+
 export type {
     BreadcrumbItem,
     Address,
@@ -280,5 +285,6 @@ export type {
     ProductSingle,
     ProductApiResponse,
     Cart,
-    CartAPI
+    CartAPI,
+    SelectOption
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { defineComponent } from "vue";
     import { getProducts } from "@/services/commercetoolsApi";
-    import type { ProductAllData, ProductApiResponse } from "@/types";
+    import type { ProductAllData, ProductApiResponse, SelectOption } from "@/types";
 
     export default defineComponent({
         name: "ProductsView",
@@ -15,11 +15,19 @@
                     maxPrice: null as number | null,
                     brand: null as string | null,
                     color: null as string | null,
-                    size: null as string | null
+                    size: null as string | null,
+                    sortBy: "price_desc"
                 },
                 brands: [] as string[],
                 colors: [] as string[],
-                sizes: [] as string[]
+                sizes: [] as string[],
+                sortOptions: [
+                    { title: "Price - Low to High", value: "price_asc" },
+                    { title: "Price - High to Low", value: "price_desc" },
+                    { title: "Name - A to Z", value: "name_asc" },
+                    { title: "Name - Z to A", value: "name_desc" }
+                ] as SelectOption[],
+                sortedProducts: [] as ProductAllData[]
             };
         },
         async mounted() {
@@ -68,9 +76,10 @@
         },
         computed: {
             filteredProducts(): ProductAllData[] {
-                const { minPrice, maxPrice, brand, color, size } = this.filters;
+                const { minPrice, maxPrice, brand, color, size, sortBy } = this.filters;
                 
-                return this.products.filter((product) => {
+                return this.products
+                .filter((product) => {
                     const price = product.masterVariant.prices[0].value.centAmount;
                     const productBrand = product.masterVariant.attributes.find(
                         (attr) => attr.name === "brand"
@@ -89,6 +98,25 @@
                         (!color || productColor === color) &&
                         (!size || productSize === size)
                     );
+                })
+                .sort((a, b) => {
+                    const priceA = a.masterVariant.prices[0].value.centAmount;
+                    const priceB = b.masterVariant.prices[0].value.centAmount;
+                    const nameA = a.name && a.name["en-GB"] ? a.name["en-GB"].toLowerCase() : "";
+                    const nameB = b.name && b.name["en-GB"] ? b.name["en-GB"].toLowerCase() : "";
+
+                    switch (sortBy) {
+                        case "price_asc":
+                            return priceA - priceB;
+                        case "price_desc":
+                            return priceB - priceA;
+                        case "name_asc":
+                            return nameA.localeCompare(nameB);
+                        case "name_desc":
+                            return nameB.localeCompare(nameA);
+                        default:
+                            return 0;
+                    }
                 });
             }
         },
@@ -99,15 +127,31 @@
             goToDetailedProduct(productId: string) {
                 this.$router.push({ name: "detailed", params: { id: productId } });
             },
-            applyFilters() {},
+            async applyFilters() {
+                this.isLoading = true;
+
+                try {
+                    const response: ProductApiResponse = await getProducts();
+                    this.products = response.results;
+                } catch (err) {
+                    this.errorMessage = "Failed to fetch products";
+                } finally {
+                    this.isLoading = false;
+                }
+            },
             resetFilters() {
                 this.filters = {
                     minPrice: null,
                     maxPrice: null,
                     brand: null,
                     color: null,
-                    size: null
+                    size: null,
+                    sortBy: "price_desc"
                 };
+                this.applyFilters();
+            },
+            clearFilters() {
+                this.filters.sortBy = "price_desc";
                 this.applyFilters();
             },
             getProductColors(product: ProductAllData): string[] {
@@ -166,6 +210,13 @@
                             @change="applyFilters"
                             clearable
                         ></v-select>
+                        <v-select
+                            v-model="filters.sortBy"
+                            :items="sortOptions"
+                            label="Sort By"
+                            @change="applyFilters"
+                            @click:clear="clearFilters">
+                        </v-select>
                         <v-btn @click="resetFilters">Reset Filters</v-btn>
                     </v-card-text>
                 </v-card>
@@ -182,6 +233,46 @@
                 <v-row v-if="filteredProducts.length" class="products-grid" dense justify="center">
                     <v-col
                         v-for="product in filteredProducts"
+                        :key="product.id"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="3"
+                    >
+                        <v-card class="product-card" elevation="2" @click="goToDetailedProduct(product.id)">
+                            <v-img
+                                v-if="product.masterVariant.images.length"
+                                :src="product.masterVariant.images[0].url"
+                                alt="Product Image"
+                                class="product-image"
+                                height="200px"
+                            ></v-img>
+                            <v-card-title class="product-name">{{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}</v-card-title>
+                            <v-card-text class="product-description">{{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}</v-card-text>
+                            <v-card-subtitle class="price">
+                                <div v-if="product.masterVariant.prices.length">
+                                    <template v-if="product.masterVariant.prices[0].discounted">
+                                        <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
+                                        <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
+                                    </template>
+                                    <template v-else>€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</template>
+                                </div>
+                                <span v-else class="no-price">No Price Available</span>
+                            </v-card-subtitle>
+                            <v-card-actions>
+                                <v-chip
+                                    v-for="color in getProductColors(product)"
+                                    :key="color"
+                                    :style="{ backgroundColor: color }"
+                                    class="color-chip"
+                                ></v-chip>
+                            </v-card-actions>
+                        </v-card>
+                    </v-col>
+                </v-row>
+                <v-row v-if="sortedProducts.length" class="products-grid" dense justify="center">
+                    <v-col
+                        v-for="product in sortedProducts"
                         :key="product.id"
                         cols="12"
                         sm="6"
@@ -241,7 +332,7 @@
         border-radius: 8px;
         overflow: hidden;
         background-color: #fff;
-        transition: transform 0.2s;
+        transition: transform 0.3s ease, filter 0.3s ease;
         padding: 20px;
         display: flex;
         flex-direction: column;
@@ -251,6 +342,7 @@
 
     .product-card:hover {
         transform: translateY(-10px);
+        filter: brightness(1.05);
     }
 
     .product-image {
