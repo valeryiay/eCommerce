@@ -1,15 +1,13 @@
 <script lang="ts">
     import { defineComponent } from "vue";
-    import { getProducts, getCategories } from "@/services/commercetoolsApi";
-    import type { ProductAllData, ProductApiResponse, SelectOption, Category } from "@/types";
+    import { getProducts } from "@/services/commercetoolsApi";
+    import type { ProductAllData, ProductApiResponse, SelectOption } from "@/types";
 
     export default defineComponent({
         name: "ProductsView",
         data() {
             return {
                 products: [] as ProductAllData[],
-                categories: [] as Category[],
-                selectedCategory: null as Category | null,
                 isLoading: false,
                 errorMessage: null as string | null,
                 filters: {
@@ -37,12 +35,8 @@
             this.isLoading = true;
 
             try {
-                const [productsResponse, categoriesResponse] = await Promise.all([
-                    getProducts(),
-                    getCategories()
-                ]);
-                this.products = productsResponse.results;
-                this.categories = categoriesResponse;
+                const response: ProductApiResponse = await getProducts();
+                this.products = response.results;
 
                 const brandSet = new Set<string>();
                 const colorSet = new Set<string>();
@@ -84,8 +78,7 @@
         computed: {
             filteredProducts(): ProductAllData[] {
                 const { minPrice, maxPrice, brand, color, size, sortBy } = this.filters;
-                const selectedCategoryId = this.selectedCategory?.id;
-
+                
                 return this.products
                 .filter((product) => {
                     const price = product.masterVariant.prices[0].value.centAmount;
@@ -103,13 +96,6 @@
                         .includes(this.searchQuery.toLowerCase());
 
                     return (
-                        (!selectedCategoryId || product.categories.some((category: string | Category) => {
-                            if (typeof category === "string") {
-                                return category === selectedCategoryId.toString();
-                            } else {
-                                return category.id.toString() === String(selectedCategoryId);
-                            }
-                        })) &&
                         (!minPrice || price >= minPrice * 100) &&
                         (!maxPrice || price <= maxPrice * 100) &&
                         (!brand || productBrand === brand) &&
@@ -140,36 +126,6 @@
             }
         },
         methods: {
-            updateFilters(key: string, value: string | number | null) {
-                if (["minPrice", "maxPrice", "brand", "color", "size", "sortBy"].includes(key)) {
-                    (this.filters as any)[key] = value;
-                }
-            },
-            extractAttributes() {
-                const brandSet = new Set<string>();
-                const colorSet = new Set<string>();
-                const sizeSet = new Set<string>();
-
-                this.products.forEach((product) => {
-                    const brand = product.masterVariant.attributes.find(attr => attr.name === "brand")?.value.key;
-                    const color = product.masterVariant.attributes.find(attr => attr.name === "color")?.value.key;
-                    const size = product.masterVariant.attributes.find(attr => attr.name === "size")?.value.key;
-
-                    if (brand) {
-                        brandSet.add(brand);
-                    }
-                    if (color) {
-                        colorSet.add(color);
-                    }
-                    if (size) {
-                        sizeSet.add(size);
-                    }
-                });
-
-                this.brands = Array.from(brandSet);
-                this.colors = Array.from(colorSet);
-                this.sizes = Array.from(sizeSet);
-            },
             formatPrice(amount: number): string {
                 return (amount / 100).toFixed(2);
             },
@@ -182,7 +138,6 @@
                 try {
                     const response: ProductApiResponse = await getProducts();
                     this.products = response.results;
-                    this.extractAttributes();
                 } catch (err) {
                     this.errorMessage = "Failed to fetch products";
                 } finally {
@@ -211,14 +166,6 @@
                     .map((attr) => attr.value.key);
 
                 return colors;
-            },
-            navigateToCategory(category: Category) {
-                this.selectedCategory = category;
-                this.applyFilters();
-            },
-            navigateToHome() {
-                this.selectedCategory = null;
-                this.applyFilters();
             }
         }
     });
@@ -229,35 +176,10 @@
         <v-row>
             <v-col cols="12">
                 <h1 class="text-center">Product Catalog</h1>
-                <v-breadcrumbs>
-                    <v-breadcrumbs-item
-                        :to="{ name: 'home' }"
-                        @click="navigateToHome"
-                    >Home</v-breadcrumbs-item>
-                    <v-breadcrumbs-item
-                        v-for="category in selectedCategory?.path || []"
-                        :key="category.id"
-                        :to="{ name: 'category', params: { id: category.id } }"
-                        @click="navigateToCategory(category)"
-                    >{{ category.title }}</v-breadcrumbs-item>
-                    <v-breadcrumbs-item v-if="selectedCategory">{{ selectedCategory.title }}</v-breadcrumbs-item>
-                </v-breadcrumbs>
             </v-col>
         </v-row>
         <v-row>
             <v-col cols="12" md="3">
-                <v-card class="filter-card">
-                    <v-card-title>Categories</v-card-title>
-                    <v-list>
-                        <v-list-item
-                            v-for="category in categories"
-                            :key="category.id"
-                            @click="navigateToCategory(category)"
-                        >
-                            <v-list-item-title>{{ category.title }}</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
-                </v-card>
                 <v-card class="filter-card">
                     <v-card-title>Search</v-card-title>
                     <v-card-text>
@@ -282,9 +204,8 @@
                             :items="sortOptions"
                             label="Sort By"
                             @change="applyFilters"
-                            @click:clear="resetFilters"
-                            clearable
-                        ></v-select>
+                            @click:clear="clearFilters">
+                        </v-select>
                     </v-card-text>
                 </v-card>
                 <v-card class="filter-card">
@@ -307,7 +228,6 @@
                             :items="brands"
                             label="Brand"
                             @change="applyFilters"
-                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-select
@@ -315,7 +235,6 @@
                             :items="colors"
                             label="Color"
                             @change="applyFilters"
-                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-select
@@ -323,7 +242,6 @@
                             :items="sizes"
                             label="Size"
                             @change="applyFilters"
-                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-btn @click="resetFilters">Reset Filters</v-btn>
