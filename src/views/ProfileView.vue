@@ -311,47 +311,45 @@
                 const { id, version } = this.authStore.user!.user!;
                 const { cart, token} = this.authStore.user!;
 
-                const request = {
-                    action: "changeAddress",
-                    addressId: this.addressDetails.addressFormModel.id,
-                    address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
-                };
-
-                let updatedUserData: Customer | Error;
-
                 try {
+                    const actions = [];
+
                     if (this.computedIsAddressDataChanged) {
-                        updatedUserData = await updateUser(
-                            [request],
-                            id,
-                            token.access_token,
-                            version
-                        );
-
-                        if (updatedUserData instanceof Error) {
-                            throw new Error(updatedUserData.message);
-                        }
-
-                        this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
+                        actions.push({
+                            action: "changeAddress",
+                            addressId: this.addressDetails.addressFormModel.id,
+                            address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
+                        });
                     }
 
                     if (this.computedIsAddressBillingAndDeFaultDataChanged) {
-                        updatedUserData = await addSpecialAddress(
-                            this.addressDetails.addressFormModel.id,
-                            this.addressDetails.addressFormModel.isShipping ? "shipping" : "billing",
+                        if (this.addressDetails.addressFormModel.isShippingAddressDefault) {
+                            actions.push({
+                                action: "setDefaultShippingAddress",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        }
+
+                        if (this.addressDetails.addressFormModel.isBillingAddressDefault) {
+                            actions.push({
+                                action: "setDefaultBillingAddress",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        }
+                    }
+
+                    const updatedUserData: Customer | Error = await updateUser(
+                            actions,
                             id,
                             token.access_token,
                             version
                         );
 
-                        if (updatedUserData instanceof Error) {
-                            throw new Error(updatedUserData.message);
-                        }
-
-                        this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
+                    if (updatedUserData instanceof Error) {
+                        throw new Error(updatedUserData.message);
                     }
 
-
+                    this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
                 } catch(error) {
                     this.notification.message = String(error);
                     this.notification.isDisplay = true;
