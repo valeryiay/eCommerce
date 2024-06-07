@@ -5,7 +5,7 @@
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
     import { useAuthStore } from "@/store";
-    import { changePassword, updateUser } from "@/services/commercetoolsApi";
+    import { changePassword, removeAddress, updateUser } from "@/services/commercetoolsApi";
 
     export default {
         data: () => ({
@@ -33,7 +33,15 @@
                 currPassword: "",
                 newPassword: ""
             },
-            commonValidationRules: ValidationRules
+            addressDetails: {
+                dialogAddressDelete: false,
+                editAddressItem: null as FullCustomerAddress | null
+            },
+            commonValidationRules: ValidationRules,
+            notification: {
+                isDisplay: false,
+                message: ""
+            }
         }),
         methods: {
             mergeProps,
@@ -155,10 +163,10 @@
                     return;
                 }
 
-                try {
-                    const { id, version } = this.authStore.user!.user!;
-                    const { cart, token} = this.authStore.user!;
+                const { id, version } = this.authStore.user!.user!;
+                const { cart, token} = this.authStore.user!;
 
+                try {
                     // General details update, like First Name, Last Name, Bay of Birth
                     if (formGeneralDetailsDiff.length !== 0) {
                         const updatedUserData: Customer | Error = await updateUser(formGeneralDetailsDiff, id, token.access_token, version);
@@ -240,6 +248,46 @@
                         this.editGeneralDetails.loading = false;
                     }, 500);
                 }
+            },
+            editAddressItem(item: FullCustomerAddress) {
+                this.addressDetails.editAddressItem = item;
+                this.notification.message = "";
+
+                console.log("Edit:", item);
+            },
+            deleteAddressItem(item: FullCustomerAddress) {
+                this.notification.message = "";
+                this.addressDetails.editAddressItem = item;
+                this.addressDetails.dialogAddressDelete = true;
+            },
+            closeAddressDeleteDialog() {
+                this.addressDetails.editAddressItem = null;
+                this.addressDetails.dialogAddressDelete = false;
+            },
+            async deleteAddressItemConfirm() {
+                const { id, version } = this.authStore.user!.user!;
+                const { cart, token} = this.authStore.user!;
+
+                try {
+                    const updatedUserData: Customer | Error = await removeAddress(
+                        this.addressDetails.editAddressItem!.id,
+                        id,
+                        token.access_token,
+                        version
+                    );
+
+                    if (updatedUserData instanceof Error) {
+                        throw new Error(updatedUserData.message);
+                    }
+
+                    this.authStore.updateUserData({ user: updatedUserData, cart: cart!, token: token });
+                } catch(error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
+
+                this.addressDetails.editAddressItem = null;
+                this.addressDetails.dialogAddressDelete = false;
             }
         },
         computed: {
@@ -296,6 +344,11 @@
 
                             return "";
                         }
+                    },
+                    {
+                        title: "Actions",
+                        key: "actions",
+                        sortable: false
                     }
                 ];
             },
@@ -562,9 +615,7 @@
                         <v-tab value="addresses">Addresses</v-tab>
                         <v-tab value="orders">Orders</v-tab>
                     </v-tabs>
-                    <v-tabs-window
-                        v-model="customerTabs"
-                    >
+                    <v-tabs-window v-model="customerTabs">
                         <v-tabs-window-item value="addresses">
                             <v-card>
                                 <v-data-table
@@ -575,7 +626,33 @@
                                     <template v-slot:[`item.addressType`]="{ value }">
                                         <v-chip :color="getColorForAddressType(value)">{{ value  }}</v-chip>
                                     </template>
+                                    <template v-slot:[`item.actions`]="{ item }">
+                                        <v-icon
+                                            class="me-2"
+                                            size="small"
+                                            @click="editAddressItem(item as FullCustomerAddress)"
+                                        >
+                                            mdi-pencil
+                                        </v-icon>
+                                        <v-icon
+                                            size="small"
+                                            @click="deleteAddressItem(item as FullCustomerAddress)"
+                                        >
+                                            mdi-delete
+                                        </v-icon>
+                                    </template>
                                 </v-data-table>
+                                <v-dialog v-model="addressDetails.dialogAddressDelete" max-width="500px">
+                                    <v-card>
+                                        <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+                                        <v-card-actions>
+                                            <v-spacer></v-spacer>
+                                            <v-btn color="blue-darken-1" variant="text" @click="closeAddressDeleteDialog">Cancel</v-btn>
+                                            <v-btn color="blue-darken-1" variant="text" @click="deleteAddressItemConfirm">OK</v-btn>
+                                            <v-spacer></v-spacer>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
                             </v-card>
                         </v-tabs-window-item>
                         <v-tabs-window-item value="orders">
@@ -587,6 +664,19 @@
                 </v-sheet>
             </v-col>
         </v-row>
+        <v-snackbar v-model="notification.isDisplay" multi-line>
+            {{ notification.message }}
+
+            <template v-slot:actions>
+                <v-btn
+                    color="red"
+                    variant="text"
+                    @click="notification.isDisplay = false"
+                >
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 </template>
 
