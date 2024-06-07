@@ -353,7 +353,11 @@
                 } catch(error) {
                     this.notification.message = String(error);
                     this.notification.isDisplay = true;
+
+                    return;
                 }
+
+                this.closeAddressItemDialog();
             },
             deleteAddressItem(item: FullCustomerAddress) {
                 this.notification.message = "";
@@ -917,10 +921,10 @@
                                                         </v-col>
                                                         <v-col>
                                                             <v-switch
-                                                                v-model="addressDetails.addressFormModel.isShippingAddressDefault"
+                                                                v-model="addressDetails.addressFormModel.isBilling"
                                                                 density="compact"
                                                                 color="primary"
-                                                                label="Set as SHIPPING DEFAULT address?"
+                                                                label="Set as BILLING address?"
                                                             ></v-switch>
                                                         </v-col>
                                                     </v-row>
@@ -928,10 +932,10 @@
                                                     <v-row>
                                                         <v-col>
                                                             <v-switch
-                                                                v-model="addressDetails.addressFormModel.isBilling"
+                                                                v-model="addressDetails.addressFormModel.isShippingAddressDefault"
                                                                 density="compact"
                                                                 color="primary"
-                                                                label="Set as BILLING address?"
+                                                                label="Set as SHIPPING DEFAULT address?"
                                                             ></v-switch>
                                                         </v-col>
                                                         <v-col>
