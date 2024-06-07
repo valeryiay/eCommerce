@@ -254,6 +254,26 @@
                     }, 500);
                 }
             },
+            onShippingAddressChange() {
+                if (!this.addressDetails.addressFormModel.isShipping && this.addressDetails.addressFormModel.isShippingAddressDefault ) {
+                    this.addressDetails.addressFormModel.isShippingAddressDefault = false;
+                }
+            },
+            onBillingAddressChange() {
+                if (!this.addressDetails.addressFormModel.isBilling && this.addressDetails.addressFormModel.isBillingAddressDefault ) {
+                    this.addressDetails.addressFormModel.isBillingAddressDefault = false;
+                }
+            },
+            onDefaultShippingAddressChange() {
+                if (this.addressDetails.addressFormModel.isShippingAddressDefault && !this.addressDetails.addressFormModel.isShipping ) {
+                    this.addressDetails.addressFormModel.isShipping = true;
+                }
+            },
+            onDefaultBillingAddressChange() {
+                if (this.addressDetails.addressFormModel.isBillingAddressDefault && !this.addressDetails.addressFormModel.isBilling ) {
+                    this.addressDetails.addressFormModel.isBilling = true;
+                }
+            },
             editAddressItem(item: FullCustomerAddress) {
                 this.addressDetails.editAddressItem = item;
                 this.notification.message = "";
@@ -301,25 +321,45 @@
 
                 this.addressDetails.dialogAddressNewOrUpdate = false;
             },
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             async editAddressItemConfirmSave() {
-                const { id, version } = this.authStore.user!.user!;
+                let { id, version } = this.authStore.user!.user!;
                 const { cart, token} = this.authStore.user!;
 
                 try {
-                    const actions = [];
+                    let actions = [];
 
                     if (this.computedIsAddressDataChanged) {
-                        actions.push({
-                            action: "changeAddress",
-                            addressId: this.addressDetails.addressFormModel.id,
-                            address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
-                        });
+                        if (this.addressDetails.addressFormModel.id) {
+                            actions.push({
+                                action: "changeAddress",
+                                addressId: this.addressDetails.addressFormModel.id,
+                                address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
+                            });
+                        } else {
+                            actions.push({
+                                action: "addAddress",
+                                address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
+                            });
+                        }
+                    }
+
+                    if (this.computedIsAddressBillingAndDeFaultDataChanged && this.addressDetails.addressFormModel.id === "") {
+                        const updatedUserData: Customer | Error = await updateUser(
+                            actions,
+                            id,
+                            token.access_token,
+                            version
+                        );
+
+                        if (updatedUserData instanceof Error) {
+                            throw new Error(updatedUserData.message);
+                        }
+
+                        this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
+
+                        actions = [];
+                        version = updatedUserData.version;
+                        this.addressDetails.addressFormModel.id = updatedUserData.addresses[updatedUserData.addresses.length - 1].id || "";
                     }
 
                     if (this.computedIsAddressBillingAndDeFaultDataChanged) {
@@ -982,6 +1022,7 @@
                                                                 density="compact"
                                                                 color="primary"
                                                                 label="Set as SHIPPING address?"
+                                                                @change="onShippingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
                                                         <v-col>
@@ -990,6 +1031,7 @@
                                                                 density="compact"
                                                                 color="primary"
                                                                 label="Set as BILLING address?"
+                                                                @change="onBillingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
                                                     </v-row>
@@ -1001,6 +1043,7 @@
                                                                 density="compact"
                                                                 color="primary"
                                                                 label="Set as SHIPPING DEFAULT address?"
+                                                                @change="onDefaultShippingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
                                                         <v-col>
@@ -1009,6 +1052,7 @@
                                                                 density="compact"
                                                                 color="primary"
                                                                 label="Set as BILLING DEFAULT address?"
+                                                                @change="onDefaultBillingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
                                                     </v-row>
