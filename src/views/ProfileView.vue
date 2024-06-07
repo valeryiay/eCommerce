@@ -323,14 +323,54 @@
                     }
 
                     if (this.computedIsAddressBillingAndDeFaultDataChanged) {
-                        if (this.addressDetails.addressFormModel.isShippingAddressDefault) {
+                        // Shipping
+                        if (this.addressDetails.addressFormModel.isShipping &&
+                            this.addressDetails.addressFormModel.isShipping !== this.addressDetails.addressFormModelShadowCopy.isShipping
+                        ) {
+                            actions.push({
+                                action: "addShippingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        } else if (!this.addressDetails.addressFormModel.isShipping &&
+                                    this.addressDetails.addressFormModel.isShipping !== this.addressDetails.addressFormModelShadowCopy.isShipping
+                        ) {
+                            actions.push({
+                                action: "removeShippingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        }
+
+                        // Shipping Default
+                        if (this.addressDetails.addressFormModel.isShippingAddressDefault &&
+                            this.addressDetails.addressFormModel.isShippingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isShippingAddressDefault
+                        ) {
                             actions.push({
                                 action: "setDefaultShippingAddress",
                                 addressId: this.addressDetails.addressFormModel.id,
                             });
                         }
 
-                        if (this.addressDetails.addressFormModel.isBillingAddressDefault) {
+                        // Billing
+                        if (this.addressDetails.addressFormModel.isBilling &&
+                            this.addressDetails.addressFormModel.isBilling !== this.addressDetails.addressFormModelShadowCopy.isBilling
+                        ) {
+                            actions.push({
+                                action: "addBillingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        } else if (!this.addressDetails.addressFormModel.isBilling &&
+                                    this.addressDetails.addressFormModel.isBilling !== this.addressDetails.addressFormModelShadowCopy.isBilling
+                        ) {
+                            actions.push({
+                                action: "removeBillingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        }
+
+                        // Billing Default
+                        if (this.addressDetails.addressFormModel.isBillingAddressDefault &&
+                            this.addressDetails.addressFormModel.isBillingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isBillingAddressDefault
+                        ) {
                             actions.push({
                                 action: "setDefaultBillingAddress",
                                 addressId: this.addressDetails.addressFormModel.id,
