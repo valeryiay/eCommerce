@@ -120,6 +120,7 @@ type Category = {
     url: string;
     parentId: number | null;
     ctId: string | null;
+    path?: Category[];
 };
 
 type ProductAllData = {
