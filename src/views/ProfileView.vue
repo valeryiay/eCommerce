@@ -609,7 +609,7 @@
 </script>
 
 <template>
-    <v-container fluid>
+    <v-container class="container" fluid>
         <v-row>
             <v-col>
                 <v-sheet rounded="lg">
@@ -1131,6 +1131,13 @@
 </template>
 
 <style scoped>
+    .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: Poppins, sans-serif;
+    }
+
     .v-row {
         margin: 0;
     }
