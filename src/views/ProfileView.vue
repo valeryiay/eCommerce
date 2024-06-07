@@ -5,7 +5,7 @@
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
     import { useAuthStore } from "@/store";
-    import { addSpecialAddress, changePassword, removeAddress, updateUser } from "@/services/commercetoolsApi";
+    import { changePassword, removeAddress, updateUser } from "@/services/commercetoolsApi";
 
     export default {
         data: () => ({
@@ -323,6 +323,7 @@
                     }
 
                     if (this.computedIsAddressBillingAndDeFaultDataChanged) {
+                        // TODO: Make builders out of this if
                         // Shipping
                         if (this.addressDetails.addressFormModel.isShipping &&
                             this.addressDetails.addressFormModel.isShipping !== this.addressDetails.addressFormModelShadowCopy.isShipping
@@ -346,6 +347,18 @@
                         ) {
                             actions.push({
                                 action: "setDefaultShippingAddress",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        } else if (!this.addressDetails.addressFormModel.isShippingAddressDefault &&
+                                    this.addressDetails.addressFormModel.isShippingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isShippingAddressDefault
+                        ) {
+                            actions.push({
+                                action: "removeShippingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+
+                            actions.push({
+                                action: "addShippingAddressId",
                                 addressId: this.addressDetails.addressFormModel.id,
                             });
                         }
@@ -373,6 +386,18 @@
                         ) {
                             actions.push({
                                 action: "setDefaultBillingAddress",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+                        } else if (!this.addressDetails.addressFormModel.isBillingAddressDefault &&
+                                    this.addressDetails.addressFormModel.isBillingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isBillingAddressDefault
+                        ) {
+                            actions.push({
+                                action: "removeBillingAddressId",
+                                addressId: this.addressDetails.addressFormModel.id,
+                            });
+
+                            actions.push({
+                                action: "addBillingAddressId",
                                 addressId: this.addressDetails.addressFormModel.id,
                             });
                         }
