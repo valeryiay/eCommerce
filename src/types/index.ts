@@ -26,10 +26,14 @@ type FullCustomerAddress = {
     streetNumber: string;
 }
 
-type FullCustomerAddressModel = FullCustomerAddress & {
-    type: string;
-    isDefault: boolean;
+type AddressType = {
+    isShipping: boolean;
+    isShippingAddressDefault: boolean;
+    isBilling: boolean;
+    isBillingAddressDefault: boolean;
 };
+
+type FullCustomerAddressModel = FullCustomerAddress & AddressType;
 
 type RegisterUser = {
     firstName: string;
@@ -284,6 +288,7 @@ export type {
     BreadcrumbItem,
     Address,
     FullCustomerAddress,
+    AddressType,
     FullCustomerAddressModel,
     TokenResponse,
     Customer,

@@ -39,17 +39,6 @@ const COUNTRIES = [
     }
 ];
 
-const ADDRESS_TYPE = [
-    {
-        title: "Shipping",
-        value: "shipping"
-    },
-    {
-        title: "Billing",
-        value: "billing"
-    }
-];
-
 const MAX_PRICE_FILTER = 100000;
 
 export {
@@ -59,6 +48,5 @@ export {
     BRANDS,
     COLORS,
     MAX_PRICE_FILTER,
-    COUNTRIES,
-    ADDRESS_TYPE
+    COUNTRIES
 };

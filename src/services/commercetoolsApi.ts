@@ -275,7 +275,7 @@ export async function getAnonymousToken() {
 
 export async function addSpecialAddress(
     addressId: string,
-    addressType: "shipping" | "billing",
+    addressType: "shipping" | "billing" | "",
     id: string,
     bearerToken: string,
     version: number

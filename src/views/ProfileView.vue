@@ -1,11 +1,11 @@
 <script lang="ts">
     import { mergeProps } from "vue";
-    import type { Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress, FullCustomerAddressModel } from "@/types";
-    import { COUNTRIES, ADDRESS_TYPE } from "@/constants";
+    import type { AddressType, Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress, FullCustomerAddressModel } from "@/types";
+    import { COUNTRIES } from "@/constants";
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
     import { useAuthStore } from "@/store";
-    import { changePassword, removeAddress, updateUser } from "@/services/commercetoolsApi";
+    import { addSpecialAddress, changePassword, removeAddress, updateUser } from "@/services/commercetoolsApi";
 
     export default {
         data: () => ({
@@ -40,8 +40,7 @@
                 editAddressItem: {} as FullCustomerAddress,
                 addressFormModel: {} as FullCustomerAddressModel,
                 addressFormModelShadowCopy: {} as FullCustomerAddressModel,
-                countries: COUNTRIES,
-                addressTypes: ADDRESS_TYPE
+                countries: COUNTRIES
             },
             commonValidationRules: ValidationRules,
             notification: {
@@ -261,12 +260,9 @@
 
                 this.addressDetails.addressFormModel = {} as FullCustomerAddressModel;
                 this.addressDetails.addressFormModelShadowCopy = {} as FullCustomerAddressModel;
-
-                this.addressDetails.addressFormModel = { ...item } as FullCustomerAddressModel;
-
                 const addressInfo = this.getAddressTypeAndIfDefault(item.id);
-                this.addressDetails.addressFormModel.type = addressInfo.type;
-                this.addressDetails.addressFormModel.isDefault = addressInfo.isDefault;
+
+                this.addressDetails.addressFormModel = { ...item, ...addressInfo } as FullCustomerAddressModel;
 
                 this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
 
@@ -288,8 +284,10 @@
                 this.addressDetails.addressFormModel.state = "";
                 this.addressDetails.addressFormModel.streetName = "";
                 this.addressDetails.addressFormModel.streetNumber = "";
-                this.addressDetails.addressFormModel.type = "";
-                this.addressDetails.addressFormModel.isDefault = false;
+                this.addressDetails.addressFormModel.isShipping = false;
+                this.addressDetails.addressFormModel.isShippingAddressDefault = false;
+                this.addressDetails.addressFormModel.isBilling = false;
+                this.addressDetails.addressFormModel.isBillingAddressDefault = false;
 
                 this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
 
@@ -303,11 +301,61 @@
 
                 this.addressDetails.dialogAddressNewOrUpdate = false;
             },
-            editAddressItemConfirmSave() {
-                // TODO: Add edit functionality
-                console.log(this.addressDetails.addressFormModel);
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            async editAddressItemConfirmSave() {
+                const { id, version } = this.authStore.user!.user!;
+                const { cart, token} = this.authStore.user!;
 
-                this.addressDetails.dialogAddressNewOrUpdate = false;
+                const request = {
+                    action: "changeAddress",
+                    addressId: this.addressDetails.addressFormModel.id,
+                    address: { ...this.addressDetails.addressFormModel } as FullCustomerAddress
+                };
+
+                let updatedUserData: Customer | Error;
+
+                try {
+                    if (this.computedIsAddressDataChanged) {
+                        updatedUserData = await updateUser(
+                            [request],
+                            id,
+                            token.access_token,
+                            version
+                        );
+
+                        if (updatedUserData instanceof Error) {
+                            throw new Error(updatedUserData.message);
+                        }
+
+                        this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
+                    }
+
+                    if (this.computedIsAddressBillingAndDeFaultDataChanged) {
+                        updatedUserData = await addSpecialAddress(
+                            this.addressDetails.addressFormModel.id,
+                            this.addressDetails.addressFormModel.isShipping ? "shipping" : "billing",
+                            id,
+                            token.access_token,
+                            version
+                        );
+
+                        if (updatedUserData instanceof Error) {
+                            throw new Error(updatedUserData.message);
+                        }
+
+                        this.authStore.updateUserData({ user: updatedUserData! as Customer, cart: cart!, token: token });
+                    }
+
+
+                } catch(error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
             },
             deleteAddressItem(item: FullCustomerAddress) {
                 this.notification.message = "";
@@ -343,33 +391,13 @@
                 this.addressDetails.editAddressItem = {} as FullCustomerAddress;
                 this.addressDetails.dialogAddressDelete = false;
             },
-            getAddressTypeAndIfDefault(addressId: string): { type: string, isDefault: boolean } {
-                const result = {
-                    type: "",
-                    isDefault: false
-                };
-
-                const isShippingAddress = this.authStore?.user?.user?.shippingAddressIds.includes(addressId);
-                const isShippingAddressDefault = this.authStore?.user?.user?.defaultShippingAddressId === addressId;
-
-                if (isShippingAddress) {
-                    result.type = "shipping";
-                    result.isDefault = isShippingAddressDefault;
-
-                    return result;
-                }
-
-                const isBillingAddress = this.authStore?.user?.user?.billingAddressIds.includes(addressId);
-                const isBillingAddressDefault = this.authStore?.user?.user?.defaultBillingAddressId === addressId;
-
-                if (isBillingAddress) {
-                    result.type = "billing";
-                    result.isDefault = isBillingAddressDefault;
-
-                    return result;
-                }
-
-                return result;
+            getAddressTypeAndIfDefault(addressId: string): AddressType {
+                return {
+                    isShipping: this.authStore?.user?.user?.shippingAddressIds.includes(addressId),
+                    isShippingAddressDefault: this.authStore?.user?.user?.defaultShippingAddressId === addressId,
+                    isBilling: this.authStore?.user?.user?.billingAddressIds.includes(addressId),
+                    isBillingAddressDefault: this.authStore?.user?.user?.defaultBillingAddressId === addressId
+                } as AddressType;
             }
         },
         computed: {
@@ -409,22 +437,24 @@
                     {
                         title: "Address Type",
                         key: "addressType",
-                        value: (item: FullCustomerAddress) => {
+                        value: (item: FullCustomerAddress): string[] => {
+                            const result: string[] = [];
+
                             const isShippingAddress = this.authStore?.user?.user?.shippingAddressIds.includes(item.id);
                             const isShippingAddressDefault = this.authStore?.user?.user?.defaultShippingAddressId === item.id;
 
                             if (isShippingAddress) {
-                                return `Shipping ${ isShippingAddressDefault ? "(Default)" : "" }`;
+                                result.push(`Shipping ${ isShippingAddressDefault ? "(Default)" : "" }`);
                             }
 
                             const isBillingAddress = this.authStore?.user?.user?.billingAddressIds.includes(item.id);
                             const isBillingAddressDefault = this.authStore?.user?.user?.defaultBillingAddressId === item.id;
 
                             if (isBillingAddress) {
-                                return `Billing ${ isBillingAddressDefault ? "(Default)" : "" }`;
+                                result.push(`Billing ${ isBillingAddressDefault ? "(Default)" : "" }`);
                             }
 
-                            return "";
+                            return result;
                         }
                     },
                     {
@@ -456,9 +486,13 @@
                        this.addressDetails.addressFormModel.postalCode   !== this.addressDetails.addressFormModelShadowCopy.postalCode   ||
                        this.addressDetails.addressFormModel.state        !== this.addressDetails.addressFormModelShadowCopy.state        ||
                        this.addressDetails.addressFormModel.streetName   !== this.addressDetails.addressFormModelShadowCopy.streetName   ||
-                       this.addressDetails.addressFormModel.streetNumber !== this.addressDetails.addressFormModelShadowCopy.streetNumber ||
-                       this.addressDetails.addressFormModel.type         !== this.addressDetails.addressFormModelShadowCopy.type         ||
-                       this.addressDetails.addressFormModel.isDefault    !== this.addressDetails.addressFormModelShadowCopy.isDefault;
+                       this.addressDetails.addressFormModel.streetNumber !== this.addressDetails.addressFormModelShadowCopy.streetNumber;
+            },
+            computedIsAddressBillingAndDeFaultDataChanged(): boolean {
+                return this.addressDetails.addressFormModel.isShipping       !== this.addressDetails.addressFormModelShadowCopy.isShipping       ||
+                       this.addressDetails.addressFormModel.isShippingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isShippingAddressDefault ||
+                       this.addressDetails.addressFormModel.isBilling        !== this.addressDetails.addressFormModelShadowCopy.isBilling        ||
+                       this.addressDetails.addressFormModel.isBillingAddressDefault !== this.addressDetails.addressFormModelShadowCopy.isBillingAddressDefault;
             },
             computedEditAddressFormTitle(): string {
                 return this.addressDetails.editAddressItem?.id ? "Edit Address" : "Add Address";
@@ -722,7 +756,14 @@
                                     hide-default-footer
                                 >
                                     <template v-slot:[`item.addressType`]="{ value }">
-                                        <v-chip :color="getColorForAddressType(value)">{{ value  }}</v-chip>
+                                        <v-chip
+                                            v-for="(item, i) in value"
+                                            :key="i"
+                                            :color="getColorForAddressType(item)"
+                                            class="ma-1"
+                                        >
+                                            {{ item  }}
+                                        </v-chip>
                                     </template>
                                     <template v-slot:[`item.actions`]="{ item }">
                                         <v-icon
@@ -869,24 +910,38 @@
 
                                                     <v-row>
                                                         <v-col>
-                                                            <v-select
-                                                                v-model="addressDetails.addressFormModel.type"
-                                                                :items="addressDetails.addressTypes"
-                                                                :item-props="true"
-                                                                :rules="[
-                                                                    commonValidationRules.required
-                                                                ]"
-                                                                density="compact"
-                                                                label="Select address type *"
-                                                                variant="outlined"
-                                                            >
-                                                            </v-select>
-                                                        </v-col>
-                                                        <v-col class="pt-1">
                                                             <v-switch
-                                                                v-model="addressDetails.addressFormModel.isDefault"
+                                                                v-model="addressDetails.addressFormModel.isShipping"
+                                                                density="compact"
                                                                 color="primary"
-                                                                label="Set as default shipping address?"
+                                                                label="Set as SHIPPING address?"
+                                                            ></v-switch>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-switch
+                                                                v-model="addressDetails.addressFormModel.isShippingAddressDefault"
+                                                                density="compact"
+                                                                color="primary"
+                                                                label="Set as SHIPPING DEFAULT address?"
+                                                            ></v-switch>
+                                                        </v-col>
+                                                    </v-row>
+
+                                                    <v-row>
+                                                        <v-col>
+                                                            <v-switch
+                                                                v-model="addressDetails.addressFormModel.isBilling"
+                                                                density="compact"
+                                                                color="primary"
+                                                                label="Set as BILLING address?"
+                                                            ></v-switch>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-switch
+                                                                v-model="addressDetails.addressFormModel.isBillingAddressDefault"
+                                                                density="compact"
+                                                                color="primary"
+                                                                label="Set as BILLING DEFAULT address?"
                                                             ></v-switch>
                                                         </v-col>
                                                     </v-row>
@@ -905,7 +960,7 @@
                                                     Cancel
                                                 </v-btn>
                                                 <v-btn
-                                                    :disabled="!computedIsAddressDataChanged || !addressDetails.newOrEditForm"
+                                                    :disabled="!(computedIsAddressDataChanged || computedIsAddressBillingAndDeFaultDataChanged) || !addressDetails.newOrEditForm"
                                                     color="blue-darken-1"
                                                     variant="text"
                                                     type="submit"
