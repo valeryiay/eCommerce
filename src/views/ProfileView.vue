@@ -281,6 +281,14 @@
 
                 this.addressDetails.addressFormModel.firstName = this.authStore?.user?.user?.firstName || "";
                 this.addressDetails.addressFormModel.lastName = this.authStore?.user?.user?.lastName || "";
+                this.addressDetails.addressFormModel.id = "";
+                this.addressDetails.addressFormModel.city = "";
+                this.addressDetails.addressFormModel.country = "";
+                this.addressDetails.addressFormModel.postalCode = "";
+                this.addressDetails.addressFormModel.state = "";
+                this.addressDetails.addressFormModel.streetName = "";
+                this.addressDetails.addressFormModel.streetNumber = "";
+                this.addressDetails.addressFormModel.type = "";
                 this.addressDetails.addressFormModel.isDefault = false;
 
                 this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
@@ -751,7 +759,7 @@
                                                                         commonValidationRules.noSpecialChar,
                                                                         commonValidationRules.minLength(2, 'First name must be at least 2 character long')
                                                                     ]"
-                                                                    label="First Name"
+                                                                    label="First Name *"
                                                                     required
                                                                     clearable
                                                                 >
@@ -765,7 +773,7 @@
                                                                         commonValidationRules.noSpecialChar,
                                                                         commonValidationRules.minLength(2, 'Last name must be at least 2 character long')
                                                                     ]"
-                                                                    label="Last Name"
+                                                                    label="Last Name *"
                                                                     required
                                                                     clearable
                                                                 >
@@ -780,9 +788,12 @@
                                                                 v-model="addressDetails.addressFormModel.country"
                                                                 :items="addressDetails.countries"
                                                                 :item-props="true"
+                                                                :rules="[
+                                                                    commonValidationRules.required
+                                                                ]"
                                                                 item-value="code"
                                                                 density="compact"
-                                                                label="Select a country"
+                                                                label="Select a country *"
                                                                 variant="outlined"
                                                                 required
                                                             >
@@ -803,7 +814,7 @@
                                                                 v-model="addressDetails.addressFormModel.postalCode"
                                                                 :rules="[commonValidationRules.required, commonValidationRules.zipCodeContainsFiveDigits]"
                                                                 density="compact"
-                                                                label="Zip Code"
+                                                                label="Zip Code *"
                                                                 variant="outlined"
                                                                 required
                                                                 clearable
@@ -822,7 +833,7 @@
                                                                     commonValidationRules.minLength(2, 'City name must be at least 2 character long')
                                                                 ]"
                                                                 density="compact"
-                                                                label="City"
+                                                                label="City *"
                                                                 variant="outlined"
                                                                 required
                                                                 clearable
@@ -837,7 +848,7 @@
                                                                     commonValidationRules.minLength(2, 'Street name must be at least 2 character long')
                                                                 ]"
                                                                 density="compact"
-                                                                label="Street"
+                                                                label="Street *"
                                                                 variant="outlined"
                                                                 required
                                                                 clearable
@@ -866,7 +877,7 @@
                                                                     commonValidationRules.required
                                                                 ]"
                                                                 density="compact"
-                                                                label="Select address type"
+                                                                label="Select address type *"
                                                                 variant="outlined"
                                                             >
                                                             </v-select>
@@ -879,7 +890,10 @@
                                                             ></v-switch>
                                                         </v-col>
                                                     </v-row>
+
+                                                    <small class="text-caption text-medium-emphasis">*indicates required field</small>
                                                 </v-container>
+
                                             </v-card-text>
                                             <v-card-actions>
                                                 <v-spacer></v-spacer>
@@ -917,7 +931,7 @@
                             <v-btn
                                 elevation="10"
                                 size="large"
-                                class="mt-3 mr-3 float-right"
+                                class="ma-3 float-right"
                                 color="#36393f"
                                 append-icon="mdi-plus-box"
                                 @click="newAddressItem"
