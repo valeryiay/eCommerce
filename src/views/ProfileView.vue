@@ -1,7 +1,7 @@
 <script lang="ts">
     import { mergeProps } from "vue";
-    import type { Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress } from "@/types";
-    import { COUNTRIES } from "@/constants";
+    import type { Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress, FullCustomerAddressModel } from "@/types";
+    import { COUNTRIES, ADDRESS_TYPE } from "@/constants";
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
     import { useAuthStore } from "@/store";
@@ -35,7 +35,13 @@
             },
             addressDetails: {
                 dialogAddressDelete: false,
-                editAddressItem: null as FullCustomerAddress | null
+                dialogAddressNewOrUpdate: false,
+                newOrEditForm: false,
+                editAddressItem: {} as FullCustomerAddress,
+                addressFormModel: {} as FullCustomerAddressModel,
+                addressFormModelShadowCopy: {} as FullCustomerAddressModel,
+                countries: COUNTRIES,
+                addressTypes: ADDRESS_TYPE
             },
             commonValidationRules: ValidationRules,
             notification: {
@@ -253,7 +259,47 @@
                 this.addressDetails.editAddressItem = item;
                 this.notification.message = "";
 
-                console.log("Edit:", item);
+                this.addressDetails.addressFormModel = {} as FullCustomerAddressModel;
+                this.addressDetails.addressFormModelShadowCopy = {} as FullCustomerAddressModel;
+
+                this.addressDetails.addressFormModel = { ...item } as FullCustomerAddressModel;
+
+                const addressInfo = this.getAddressTypeAndIfDefault(item.id);
+                this.addressDetails.addressFormModel.type = addressInfo.type;
+                this.addressDetails.addressFormModel.isDefault = addressInfo.isDefault;
+
+                this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
+
+                this.addressDetails.dialogAddressNewOrUpdate = true;
+            },
+            newAddressItem() {
+                this.addressDetails.editAddressItem = {} as FullCustomerAddress;
+                this.notification.message = "";
+
+                this.addressDetails.addressFormModel = {} as FullCustomerAddressModel;
+                this.addressDetails.addressFormModelShadowCopy = {} as FullCustomerAddressModel;
+
+                this.addressDetails.addressFormModel.firstName = this.authStore?.user?.user?.firstName || "";
+                this.addressDetails.addressFormModel.lastName = this.authStore?.user?.user?.lastName || "";
+                this.addressDetails.addressFormModel.isDefault = false;
+
+                this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
+
+                this.addressDetails.newOrEditForm = false;
+                this.addressDetails.dialogAddressNewOrUpdate = true;
+            },
+            closeAddressItemDialog() {
+                this.addressDetails.editAddressItem = {} as FullCustomerAddress;
+                this.addressDetails.addressFormModel = {} as FullCustomerAddressModel;
+                this.addressDetails.addressFormModelShadowCopy = {} as FullCustomerAddressModel;
+
+                this.addressDetails.dialogAddressNewOrUpdate = false;
+            },
+            editAddressItemConfirmSave() {
+                // TODO: Add edit functionality
+                console.log(this.addressDetails.addressFormModel);
+
+                this.addressDetails.dialogAddressNewOrUpdate = false;
             },
             deleteAddressItem(item: FullCustomerAddress) {
                 this.notification.message = "";
@@ -261,7 +307,7 @@
                 this.addressDetails.dialogAddressDelete = true;
             },
             closeAddressDeleteDialog() {
-                this.addressDetails.editAddressItem = null;
+                this.addressDetails.editAddressItem = {} as FullCustomerAddress;;
                 this.addressDetails.dialogAddressDelete = false;
             },
             async deleteAddressItemConfirm() {
@@ -286,8 +332,36 @@
                     this.notification.isDisplay = true;
                 }
 
-                this.addressDetails.editAddressItem = null;
+                this.addressDetails.editAddressItem = {} as FullCustomerAddress;
                 this.addressDetails.dialogAddressDelete = false;
+            },
+            getAddressTypeAndIfDefault(addressId: string): { type: string, isDefault: boolean } {
+                const result = {
+                    type: "",
+                    isDefault: false
+                };
+
+                const isShippingAddress = this.authStore?.user?.user?.shippingAddressIds.includes(addressId);
+                const isShippingAddressDefault = this.authStore?.user?.user?.defaultShippingAddressId === addressId;
+
+                if (isShippingAddress) {
+                    result.type = "shipping";
+                    result.isDefault = isShippingAddressDefault;
+
+                    return result;
+                }
+
+                const isBillingAddress = this.authStore?.user?.user?.billingAddressIds.includes(addressId);
+                const isBillingAddressDefault = this.authStore?.user?.user?.defaultBillingAddressId === addressId;
+
+                if (isBillingAddress) {
+                    result.type = "billing";
+                    result.isDefault = isBillingAddressDefault;
+
+                    return result;
+                }
+
+                return result;
             }
         },
         computed: {
@@ -359,11 +433,27 @@
                 return this.generalCustomerInfoModel.newPassword !== this.authStore!.user!.user!.password;
             },
             computedIsCustomerGeneralDataChanged(): boolean {
-                return this.generalCustomerInfoModel.firstName !== this.authStore!.user!.user!.firstName ||
-                       this.generalCustomerInfoModel.lastName !== this.authStore!.user!.user!.lastName ||
+                return this.generalCustomerInfoModel.firstName   !== this.authStore!.user!.user!.firstName   ||
+                       this.generalCustomerInfoModel.lastName    !== this.authStore!.user!.user!.lastName    ||
                        this.generalCustomerInfoModel.dateOfBirth !== this.authStore!.user!.user!.dateOfBirth ||
-                       this.generalCustomerInfoModel.email !== this.authStore!.user!.user!.email ||
+                       this.generalCustomerInfoModel.email       !== this.authStore!.user!.user!.email       ||
                        this.generalCustomerInfoModel.newPassword !== this.authStore!.user!.user!.password;
+            },
+            computedIsAddressDataChanged(): boolean {
+                return this.addressDetails.addressFormModel.id           !== this.addressDetails.addressFormModelShadowCopy.id           ||
+                       this.addressDetails.addressFormModel.firstName    !== this.addressDetails.addressFormModelShadowCopy.firstName    ||
+                       this.addressDetails.addressFormModel.lastName     !== this.addressDetails.addressFormModelShadowCopy.lastName     ||
+                       this.addressDetails.addressFormModel.city         !== this.addressDetails.addressFormModelShadowCopy.city         ||
+                       this.addressDetails.addressFormModel.country      !== this.addressDetails.addressFormModelShadowCopy.country      ||
+                       this.addressDetails.addressFormModel.postalCode   !== this.addressDetails.addressFormModelShadowCopy.postalCode   ||
+                       this.addressDetails.addressFormModel.state        !== this.addressDetails.addressFormModelShadowCopy.state        ||
+                       this.addressDetails.addressFormModel.streetName   !== this.addressDetails.addressFormModelShadowCopy.streetName   ||
+                       this.addressDetails.addressFormModel.streetNumber !== this.addressDetails.addressFormModelShadowCopy.streetNumber ||
+                       this.addressDetails.addressFormModel.type         !== this.addressDetails.addressFormModelShadowCopy.type         ||
+                       this.addressDetails.addressFormModel.isDefault    !== this.addressDetails.addressFormModelShadowCopy.isDefault;
+            },
+            computedEditAddressFormTitle(): string {
+                return this.addressDetails.editAddressItem?.id ? "Edit Address" : "Add Address";
             }
         }
     };
@@ -617,7 +707,7 @@
                     </v-tabs>
                     <v-tabs-window v-model="customerTabs">
                         <v-tabs-window-item value="addresses">
-                            <v-card>
+                            <v-card class="ma-3" elevation="24">
                                 <v-data-table
                                     :headers="customerAddressesTableHeaders"
                                     :items="authStore?.user?.user?.addresses"
@@ -642,18 +732,198 @@
                                         </v-icon>
                                     </template>
                                 </v-data-table>
-                                <v-dialog v-model="addressDetails.dialogAddressDelete" max-width="500px">
+                                <v-dialog v-model="addressDetails.dialogAddressNewOrUpdate" max-width="800px">
+                                    <v-form v-model="addressDetails.newOrEditForm" @submit.prevent="editAddressItemConfirmSave">
+                                        <v-card>
+                                            <v-card-title>
+                                                <span class="text-h5">{{ computedEditAddressFormTitle }}</span>
+                                            </v-card-title>
+                                            <v-card-text>
+                                                <v-container>
+                                                    <fieldset class="mb-4">
+                                                        <legend>Contact Name</legend>
+                                                        <v-row>
+                                                            <v-col>
+                                                                <v-text-field
+                                                                    v-model="addressDetails.addressFormModel.firstName"
+                                                                    :rules="[
+                                                                        commonValidationRules.required,
+                                                                        commonValidationRules.noSpecialChar,
+                                                                        commonValidationRules.minLength(2, 'First name must be at least 2 character long')
+                                                                    ]"
+                                                                    label="First Name"
+                                                                    required
+                                                                    clearable
+                                                                >
+                                                                </v-text-field>
+                                                            </v-col>
+                                                            <v-col>
+                                                                <v-text-field
+                                                                    v-model="addressDetails.addressFormModel.lastName"
+                                                                    :rules="[
+                                                                        commonValidationRules.required,
+                                                                        commonValidationRules.noSpecialChar,
+                                                                        commonValidationRules.minLength(2, 'Last name must be at least 2 character long')
+                                                                    ]"
+                                                                    label="Last Name"
+                                                                    required
+                                                                    clearable
+                                                                >
+                                                                </v-text-field>
+                                                            </v-col>
+                                                        </v-row>
+                                                    </fieldset>
+
+                                                    <v-row>
+                                                        <v-col>
+                                                            <v-select
+                                                                v-model="addressDetails.addressFormModel.country"
+                                                                :items="addressDetails.countries"
+                                                                :item-props="true"
+                                                                item-value="code"
+                                                                density="compact"
+                                                                label="Select a country"
+                                                                variant="outlined"
+                                                                required
+                                                            >
+                                                            </v-select>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-text-field
+                                                                v-model="addressDetails.addressFormModel.state"
+                                                                density="compact"
+                                                                label="State"
+                                                                variant="outlined"
+                                                                clearable
+                                                            >
+                                                            </v-text-field>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-text-field
+                                                                v-model="addressDetails.addressFormModel.postalCode"
+                                                                :rules="[commonValidationRules.required, commonValidationRules.zipCodeContainsFiveDigits]"
+                                                                density="compact"
+                                                                label="Zip Code"
+                                                                variant="outlined"
+                                                                required
+                                                                clearable
+                                                            >
+                                                            </v-text-field>
+                                                        </v-col>
+                                                    </v-row>
+
+                                                    <v-row>
+                                                        <v-col>
+                                                            <v-text-field
+                                                                v-model="addressDetails.addressFormModel.city"
+                                                                :rules="[
+                                                                    commonValidationRules.required,
+                                                                    commonValidationRules.noSpecialChar,
+                                                                    commonValidationRules.minLength(2, 'City name must be at least 2 character long')
+                                                                ]"
+                                                                density="compact"
+                                                                label="City"
+                                                                variant="outlined"
+                                                                required
+                                                                clearable
+                                                            >
+                                                            </v-text-field>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-text-field
+                                                                v-model="addressDetails.addressFormModel.streetName"
+                                                                :rules="[
+                                                                    commonValidationRules.required,
+                                                                    commonValidationRules.minLength(2, 'Street name must be at least 2 character long')
+                                                                ]"
+                                                                density="compact"
+                                                                label="Street"
+                                                                variant="outlined"
+                                                                required
+                                                                clearable
+                                                            >
+                                                            </v-text-field>
+                                                        </v-col>
+                                                        <v-col>
+                                                            <v-text-field
+                                                                v-model="addressDetails.addressFormModel.streetNumber"
+                                                                density="compact"
+                                                                label="Street Number"
+                                                                variant="outlined"
+                                                                clearable
+                                                            >
+                                                            </v-text-field>
+                                                        </v-col>
+                                                    </v-row>
+
+                                                    <v-row>
+                                                        <v-col>
+                                                            <v-select
+                                                                v-model="addressDetails.addressFormModel.type"
+                                                                :items="addressDetails.addressTypes"
+                                                                :item-props="true"
+                                                                :rules="[
+                                                                    commonValidationRules.required
+                                                                ]"
+                                                                density="compact"
+                                                                label="Select address type"
+                                                                variant="outlined"
+                                                            >
+                                                            </v-select>
+                                                        </v-col>
+                                                        <v-col class="pt-1">
+                                                            <v-switch
+                                                                v-model="addressDetails.addressFormModel.isDefault"
+                                                                color="primary"
+                                                                label="Set as default shipping address?"
+                                                            ></v-switch>
+                                                        </v-col>
+                                                    </v-row>
+                                                </v-container>
+                                            </v-card-text>
+                                            <v-card-actions>
+                                                <v-spacer></v-spacer>
+                                                <v-btn
+                                                    color="blue-darken-1"
+                                                    variant="text"
+                                                    @click="closeAddressItemDialog"
+                                                >
+                                                    Cancel
+                                                </v-btn>
+                                                <v-btn
+                                                    :disabled="!computedIsAddressDataChanged || !addressDetails.newOrEditForm"
+                                                    color="blue-darken-1"
+                                                    variant="text"
+                                                    type="submit"
+                                                >
+                                                    Save
+                                                </v-btn>
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-form>
+                                </v-dialog>
+                                <v-dialog v-model="addressDetails.dialogAddressDelete" class="text-center" max-width="600px">
                                     <v-card>
-                                        <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+                                        <v-card-title class="text-h5">Are you sure you want to delete this address?</v-card-title>
                                         <v-card-actions>
                                             <v-spacer></v-spacer>
-                                            <v-btn color="blue-darken-1" variant="text" @click="closeAddressDeleteDialog">Cancel</v-btn>
-                                            <v-btn color="blue-darken-1" variant="text" @click="deleteAddressItemConfirm">OK</v-btn>
+                                            <v-btn color="green-darken-1" variant="text" @click="closeAddressDeleteDialog">Cancel</v-btn>
+                                            <v-btn color="red-darken-1" variant="text" @click="deleteAddressItemConfirm">Delete</v-btn>
                                             <v-spacer></v-spacer>
                                         </v-card-actions>
                                     </v-card>
                                 </v-dialog>
                             </v-card>
+                            <v-btn
+                                elevation="10"
+                                size="large"
+                                class="mt-3 mr-3 float-right"
+                                color="#36393f"
+                                append-icon="mdi-plus-box"
+                                @click="newAddressItem"
+                            >
+                                Add Address
+                            </v-btn>
                         </v-tabs-window-item>
                         <v-tabs-window-item value="orders">
                             <v-card>

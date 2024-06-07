@@ -46,7 +46,7 @@
             <template v-slot:append>
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props, isActive }">
-                        <div class="user-container d-sm-flex cursor-pointer">
+                        <div class="user-container d-sm-flex cursor-pointer mr-3">
                             <v-card
                                 v-if="authStore.isAuthorized"
                                 class="mx-auto d-flex align-center"

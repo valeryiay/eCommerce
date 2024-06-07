@@ -1,5 +1,7 @@
 const LOCALSTORAGE_NAME = "rss-ecommerce";
+
 const PRODUCTS_ON_PAGE = 20;
+
 const SORT_OPTIONS = [
     { value: "default", label: "Default sort", ctSort: "" },
     { value: "priceAsc", label: "Ascending price", ctSort: "price asc" },
@@ -37,6 +39,26 @@ const COUNTRIES = [
     }
 ];
 
+const ADDRESS_TYPE = [
+    {
+        title: "Shipping",
+        value: "shipping"
+    },
+    {
+        title: "Billing",
+        value: "billing"
+    }
+];
+
 const MAX_PRICE_FILTER = 100000;
 
-export { LOCALSTORAGE_NAME, PRODUCTS_ON_PAGE, SORT_OPTIONS, BRANDS, COLORS, MAX_PRICE_FILTER, COUNTRIES };
+export {
+    LOCALSTORAGE_NAME,
+    PRODUCTS_ON_PAGE,
+    SORT_OPTIONS,
+    BRANDS,
+    COLORS,
+    MAX_PRICE_FILTER,
+    COUNTRIES,
+    ADDRESS_TYPE
+};

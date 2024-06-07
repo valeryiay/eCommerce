@@ -15,16 +15,21 @@ type Address = {
 };
 
 type FullCustomerAddress = {
+    id: string;
+    firstName: string;
+    lastName: string;
     city: string;
     country: string;
-    firstName: string;
-    id: string;
-    lastName: string;
     postalCode: string;
     state: string;
     streetName: string;
     streetNumber: string;
 }
+
+type FullCustomerAddressModel = FullCustomerAddress & {
+    type: string;
+    isDefault: boolean;
+};
 
 type RegisterUser = {
     firstName: string;
@@ -279,6 +284,7 @@ export type {
     BreadcrumbItem,
     Address,
     FullCustomerAddress,
+    FullCustomerAddressModel,
     TokenResponse,
     Customer,
     Credentials,
