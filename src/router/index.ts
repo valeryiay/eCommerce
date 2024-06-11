@@ -4,7 +4,6 @@ import HomeView from "@/views/HomeView.vue";
 import AboutView from "@/views/AboutView.vue";
 import ProductsView from "@/views/ProductsView.vue";
 import CategoriesView from "@/views/CategoriesView.vue";
-import ContactsView from "@/views/ContactsView.vue";
 import LoginView from "@/views/LoginView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
 import RegistrationView from "@/views/RegistrationView.vue";
@@ -48,11 +47,6 @@ const router = createRouter({
                     meta: {
                         requiresAuth: true
                     }
-                },
-                {
-                    path: "/contact",
-                    name: "contact",
-                    component: ContactsView
                 },
                 {
                     path: "/about",

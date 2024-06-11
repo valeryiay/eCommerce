@@ -7,7 +7,7 @@
         name: "ProductsView",
         data() {
             const allowedFilters = new Set(["minPrice", "maxPrice", "brand", "color", "size", "sortBy"]);
-                        
+
             return {
                 products: [] as ProductAllData[],
                 categories: [] as Category[],
@@ -67,9 +67,11 @@
                     if (brand) {
                         brandSet.add(brand);
                     }
+
                     if (color) {
                         colorSet.add(color);
                     }
+
                     if (size) {
                         sizeSet.add(size);
                     }
@@ -90,56 +92,60 @@
                 const selectedCategoryId = this.selectedCategory?.id;
 
                 return this.products
-                .filter((product) => {
-                    const price = product.masterVariant.prices[0].value.centAmount;
-                    const productBrand = product.masterVariant.attributes.find(
-                        (attr) => attr.name === "brand"
-                    )?.value.key;
-                    const productColor = product.masterVariant.attributes.find(
-                        (attr) => attr.name === "color"
-                    )?.value.key;
-                    const productSize = product.masterVariant.attributes.find(
-                        (attr) => attr.name === "size"
-                    )?.value.key;
-                    const matchesSearchQuery = product.description?.["en-GB"]
-                        .toLowerCase()
-                        .includes(this.searchQuery.toLowerCase());
+                    .filter((product) => {
+                        const price = product.masterVariant.prices[0].value.centAmount;
 
-                    return (
-                        (!selectedCategoryId || product.categories.some((category: string | Category) => {
-                            if (typeof category === "string") {
-                                return category === selectedCategoryId.toString();
-                            }
+                        const productBrand = product.masterVariant.attributes.find(
+                            (attr) => attr.name === "brand"
+                        )?.value.key;
 
-                            return category.id.toString() === String(selectedCategoryId);
-                        })) &&
-                        (!minPrice || price >= minPrice * 100) &&
-                        (!maxPrice || price <= maxPrice * 100) &&
-                        (!brand || productBrand === brand) &&
-                        (!color || productColor === color) &&
-                        (!size || productSize === size) &&
-                        matchesSearchQuery
-                    );
-                })
-                .sort((a, b) => {
-                    const priceA = a.masterVariant.prices[0].value.centAmount;
-                    const priceB = b.masterVariant.prices[0].value.centAmount;
-                    const nameA = a.name && a.name["en-GB"] ? a.name["en-GB"].toLowerCase() : "";
-                    const nameB = b.name && b.name["en-GB"] ? b.name["en-GB"].toLowerCase() : "";
+                        const productColor = product.masterVariant.attributes.find(
+                            (attr) => attr.name === "color"
+                        )?.value.key;
 
-                    switch (sortBy) {
-                        case "price_asc":
-                            return priceA - priceB;
-                        case "price_desc":
-                            return priceB - priceA;
-                        case "name_asc":
-                            return nameA.localeCompare(nameB);
-                        case "name_desc":
-                            return nameB.localeCompare(nameA);
-                        default:
-                            return 0;
-                    }
-                });
+                        const productSize = product.masterVariant.attributes.find(
+                            (attr) => attr.name === "size"
+                        )?.value.key;
+
+                        const matchesSearchQuery = product.description?.["en-GB"]
+                            .toLowerCase()
+                            .includes(this.searchQuery.toLowerCase());
+
+                        return (
+                            (!selectedCategoryId || product.categories.some((category: string | Category) => {
+                                if (typeof category === "string") {
+                                    return category === selectedCategoryId.toString();
+                                }
+
+                                return category.id.toString() === String(selectedCategoryId);
+                            })) &&
+                            (!minPrice || price >= minPrice * 100) &&
+                            (!maxPrice || price <= maxPrice * 100) &&
+                            (!brand || productBrand === brand) &&
+                            (!color || productColor === color) &&
+                            (!size || productSize === size) &&
+                            matchesSearchQuery
+                        );
+                    })
+                    .sort((a, b) => {
+                        const priceA = a.masterVariant.prices[0].value.centAmount;
+                        const priceB = b.masterVariant.prices[0].value.centAmount;
+                        const nameA = a.name && a.name["en-GB"] ? a.name["en-GB"].toLowerCase() : "";
+                        const nameB = b.name && b.name["en-GB"] ? b.name["en-GB"].toLowerCase() : "";
+
+                        switch (sortBy) {
+                            case "price_asc":
+                                return priceA - priceB;
+                            case "price_desc":
+                                return priceB - priceA;
+                            case "name_asc":
+                                return nameA.localeCompare(nameB);
+                            case "name_desc":
+                                return nameB.localeCompare(nameA);
+                            default:
+                                return 0;
+                        }
+                    });
             }
         },
         methods: {
@@ -161,9 +167,11 @@
                     if (brand) {
                         brandSet.add(brand);
                     }
+
                     if (color) {
                         colorSet.add(color);
                     }
+
                     if (size) {
                         sizeSet.add(size);
                     }
@@ -201,6 +209,7 @@
                     size: null,
                     sortBy: "price_desc"
                 };
+
                 this.applyFilters();
                 this.searchQuery = "";
             },
@@ -232,18 +241,27 @@
         <v-row>
             <v-col cols="12">
                 <h1 class="text-center">Product Catalog</h1>
+
                 <v-breadcrumbs>
                     <v-breadcrumbs-item
                         :to="{ name: 'home' }"
                         @click="navigateToHome"
-                    >Home</v-breadcrumbs-item>
+                    >
+                        Home
+                    </v-breadcrumbs-item>
+
                     <v-breadcrumbs-item
                         v-for="category in selectedCategory?.path || []"
                         :key="category.id"
                         :to="{ name: 'category', params: { id: category.id } }"
                         @click="navigateToCategory(category)"
-                    >{{ category.name }}</v-breadcrumbs-item>
-                    <v-breadcrumbs-item v-if="selectedCategory">/&nbsp;&nbsp;{{ selectedCategory.name["en-GB"] }}</v-breadcrumbs-item>
+                    >
+                        {{ category.name }}
+                    </v-breadcrumbs-item>
+
+                    <v-breadcrumbs-item v-if="selectedCategory">
+                        /&nbsp;&nbsp;{{ selectedCategory.name["en-GB"] }}
+                    </v-breadcrumbs-item>
                 </v-breadcrumbs>
             </v-col>
         </v-row>
@@ -359,15 +377,21 @@
                                 class="product-image"
                                 height="200px"
                             ></v-img>
-                            <v-card-title class="product-name">{{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}</v-card-title>
-                            <v-card-text class="product-description">{{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}</v-card-text>
+                            <v-card-title class="product-name">
+                                {{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}
+                            </v-card-title>
+                            <v-card-text class="product-description">
+                                {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
+                            </v-card-text>
                             <v-card-subtitle class="price">
                                 <div v-if="product.masterVariant.prices.length">
                                     <template v-if="product.masterVariant.prices[0].discounted">
                                         <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
                                         <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
                                     </template>
-                                    <template v-else>€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</template>
+                                    <template v-else>
+                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
+                                    </template>
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>
@@ -382,7 +406,12 @@
                         </v-card>
                     </v-col>
                 </v-row>
-                <v-row v-if="sortedProducts.length" class="products-grid" dense justify="center">
+                <v-row
+                    v-if="sortedProducts.length"
+                    class="products-grid"
+                    dense
+                    justify="center"
+                >
                     <v-col
                         v-for="product in sortedProducts"
                         :key="product.id"
@@ -399,15 +428,25 @@
                                 class="product-image"
                                 height="200px"
                             ></v-img>
-                            <v-card-title class="product-name">{{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}</v-card-title>
-                            <v-card-text class="product-description">{{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}</v-card-text>
+                            <v-card-title class="product-name">
+                                {{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}
+                            </v-card-title>
+                            <v-card-text class="product-description">
+                                {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
+                            </v-card-text>
                             <v-card-subtitle class="price">
                                 <div v-if="product.masterVariant.prices.length">
                                     <template v-if="product.masterVariant.prices[0].discounted">
-                                        <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
-                                        <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
+                                        <span class="original-price">
+                                            € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
+                                        </span>
+                                        <span class="discounted-price">
+                                            € {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}
+                                        </span>
                                     </template>
-                                    <template v-else>€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</template>
+                                    <template v-else>
+                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
+                                    </template>
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>

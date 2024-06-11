@@ -36,59 +36,55 @@
             <v-btn to="/products" exact>Products</v-btn>
             <v-btn to="/categories" exact>Categories</v-btn>
             <v-btn to="/about" exact>About</v-btn>
-            <v-btn to="/contact" exact>Contact</v-btn>
 
             <v-spacer />
 
-            <v-btn icon="mdi-magnify"></v-btn>
-            <v-btn to="/basket" icon="mdi-cart-heart"></v-btn>
+            <v-menu transition="slide-x-transition">
+                <template v-slot:activator="{ props, isActive }">
+                    <div class="user-container d-sm-flex cursor-pointer mr-3">
+                        <v-card
+                            v-if="authStore.isAuthorized"
+                            class="mx-auto d-flex align-center"
+                            v-bind="props"
+                        >
+                            <v-avatar color="grey-darken-3 ml-1">
+                                <img
+                                    width="44"
+                                    height="44"
+                                    alt="Default profile image"
+                                    src="@/assets/img/default-avatar.svg"
+                                />
+                            </v-avatar>
+                            <v-card-text>
+                                <span id="customer-greeting" class="text-body-1">Hi, {{ getFullCustomerName }}!</span>
+                                <v-icon v-if="isActive" icon="mdi-menu-down"></v-icon>
+                                <v-icon v-else icon="mdi-menu-right"></v-icon>
+                            </v-card-text>
+                        </v-card>
+                        <v-tooltip v-else location="top">
+                            <template v-slot:activator="{ props }">
+                                <v-btn to="/login" v-bind="props" icon="mdi-account">
+                                    <v-icon color="grey-lighten-1">mdi-account</v-icon>
+                                </v-btn>
+                            </template>
+                            <span>Login</span>
+                        </v-tooltip>
+                    </div>
+                </template>
+                <v-card>
+                    <v-list v-if="authStore.isAuthorized" class="text-center">
+                        <v-list-item>
+                            <v-btn to="/profile" exact>Profile</v-btn>
+                        </v-list-item>
+                        <v-divider />
+                        <v-list-item>
+                            <v-btn @click="authStore.logOut()">Logout</v-btn>
+                        </v-list-item>
+                    </v-list>
+                </v-card>
+            </v-menu>
 
-            <template v-slot:append>
-                <v-menu transition="slide-x-transition">
-                    <template v-slot:activator="{ props, isActive }">
-                        <div class="user-container d-sm-flex cursor-pointer mr-3">
-                            <v-card
-                                v-if="authStore.isAuthorized"
-                                class="mx-auto d-flex align-center"
-                                v-bind="props"
-                            >
-                                <v-avatar color="grey-darken-3 ml-1">
-                                    <img
-                                        width="44"
-                                        height="44"
-                                        alt="Default profile image"
-                                        src="@/assets/img/default-avatar.svg"
-                                    />
-                                </v-avatar>
-                                <v-card-text>
-                                    <span id="customer-greeting" class="text-body-1">Hi, {{ getFullCustomerName }}!</span>
-                                    <v-icon v-if="isActive" icon="mdi-menu-down"></v-icon>
-                                    <v-icon v-else icon="mdi-menu-right"></v-icon>
-                                </v-card-text>
-                            </v-card>
-                            <v-tooltip v-else location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn to="/login" v-bind="props" icon="mdi-account">
-                                        <v-icon color="grey-lighten-1">mdi-account</v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>Login</span>
-                            </v-tooltip>
-                        </div>
-                    </template>
-                    <v-card>
-                        <v-list v-if="authStore.isAuthorized" class="text-center">
-                            <v-list-item>
-                                <v-btn to="/profile" exact>Profile</v-btn>
-                            </v-list-item>
-                            <v-divider />
-                            <v-list-item>
-                                <v-btn @click="authStore.logOut()">Logout</v-btn>
-                            </v-list-item>
-                        </v-list>
-                    </v-card>
-                </v-menu>
-            </template>
+            <v-btn id="cart-button" to="/" icon="mdi-cart-heart"></v-btn>
         </v-app-bar>
 
         <v-main class="main page-content-margin">
@@ -100,6 +96,14 @@
 </template>
 
 <style scoped>
+    .app-bar {
+        padding-left: 150px;
+    }
+
+    #cart-button {
+        margin-right: 165px;
+    }
+
     @media only screen and (max-width: 600px) {
         .app-bar {
             padding-left: 0;
@@ -132,6 +136,7 @@
             margin-right: 0;
         }
     }
+
     @media only screen and (max-width: 400px) {
         .app-bar-title {
             flex: 1;

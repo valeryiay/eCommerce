@@ -3,5 +3,16 @@
 </script>
 
 <template>
-    <TheWelcome />
+    <v-container class="main-container" fluid>
+        <TheWelcome />
+    </v-container>
 </template>
+
+<style scoped>
+    .main-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: Poppins, sans-serif;
+    }
+</style>
