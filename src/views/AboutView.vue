@@ -10,7 +10,7 @@
     <v-container class="wrapper-container">
         <v-row class="equal-height-cards">
             <v-col>
-                <v-card elevated hover class="v-card d-flex flex-column align-center pa-5 rounded-lg">
+                <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
                     <v-card-title class="text-center">Valeryia Yarash</v-card-title>
                     <v-card-subtitle class="text-center">Job title</v-card-subtitle>
                     <v-card-text class="card-text">Valeryia was instrumental in shaping the visual identity of our project. She created a comprehensive Figma layout, which served as the blueprint for all our designs.
@@ -44,14 +44,13 @@
                 </v-card>
             </v-col>
             <v-col>
-                <v-card elevated hover class="v-card d-flex flex-column align-center pa-5 rounded-lg">
+                <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
                     <v-avatar size="200" class="mb-4 mt-2">
                         <img
                             height="100%"
                             min-width="100"
                             src="@/assets/img/vitalii.jpeg" 
                             alt="Portrait photo"
-                            
                         >
                     </v-avatar>
                     <v-card-title class="text-center">Vitaly Dushkin</v-card-title>
@@ -81,7 +80,7 @@
                 </v-card>
             </v-col>
             <v-col>
-                <v-card elevated hover class="v-card d-flex flex-column align-center pa-5 rounded-lg">
+                <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
                     <v-avatar size="200" class="mb-4 mt-2">
                         <img
                             height="100%"
@@ -108,11 +107,11 @@
                                     height="100%"
                                     min-width="75"
                                     src="@/assets/img/github2.svg"
-                                    alt="Github logo"
+                                    alt="Github Logo"
                                 >
                             </v-avatar>
                         </a>
-                        <a href="https://www.linkedin.com/in/joelle-marianek-0b604a123/" target="_blank"></a>
+                        <a href="https://www.linkedin.com/in/joelle-marianek-0b604a123/" target="_blank">
                             <v-avatar size="100" class="pa-5">
                                 <img
                                     height="100%"
@@ -121,6 +120,36 @@
                                     alt="LinkedIn Logo"
                                 >
                             </v-avatar>
+                        </a>
+                    </v-row>
+                </v-card>
+            </v-col>
+        </v-row>
+        <v-row>
+            <v-col>
+                <v-card flat class="footer d-flex flex-column align-center pa-5 rounded-lg">
+                    <v-card-text class="card-text text-center">
+                        This project was developed during the Frontend Course of Rolling Scopes. Read about the school here:
+                    </v-card-text>
+                    <v-row>
+                        <a href="https://rs.school/" target="_blank">
+                            <v-avatar size="100" class="pa-2">
+                                <img
+                                    height="100%"
+                                    src="@/assets/img/rs-school-logo.svg" 
+                                    alt="Rolling Scopes Logo"
+                                >
+                            </v-avatar>
+                        </a>
+                        <a href="https://github.com/rolling-scopes-school" target="_blank">
+                            <v-avatar size="98" class="pa-2">
+                                <img
+                                    height="100%"
+                                    src="@/assets/img/github2.svg" 
+                                    alt="Github Logo"
+                                >
+                            </v-avatar>
+                        </a>
                     </v-row>
                 </v-card>
             </v-col>
@@ -148,12 +177,16 @@
         flex-wrap: wrap;
     }
 
-    .v-card {
+    .v-card-profile {
         min-height: 1179px;
         height: auto;
     }
 
     p {
         font-size: 18px;
+    }
+
+    .footer {
+        height: auto;
     }
 </style>
