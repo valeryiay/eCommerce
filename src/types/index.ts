@@ -116,10 +116,11 @@ type StateFields = {
 
 type Category = {
     id: number;
-    title: string;
+    name: Dictionary<string>;
     url: string;
     parentId: number | null;
     ctId: string | null;
+    path?: Category[];
 };
 
 type ProductAllData = {

@@ -25,7 +25,7 @@ import type {
     CartAPI,
     Dictionary,
     ProductSingle
-} from "../types";
+} from "@/types";
 
 import { PRODUCTS_ON_PAGE, MAX_PRICE_FILTER } from "../constants";
 import { getCategoryCtIds } from "../utils/getCategoryCtIds";
@@ -1201,5 +1201,34 @@ export async function deleteCart(
         }
 
         throw new Error(CT_ERROR);
+    }
+}
+
+export async function getCategories() {
+    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/categories`;
+
+    const bearerToken = await fetchBearerToken();
+
+    if (bearerToken === null) {
+        throw new Error(CT_ERROR);
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${bearerToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Couldn't fetch categories");
+        }
+
+        const responseData = await response.json();
+        return responseData.results;
+    } catch (error) {
+        throw new Error(CT_NETWORK_PROBLEM);
     }
 }

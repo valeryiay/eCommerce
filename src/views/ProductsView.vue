@@ -1,13 +1,17 @@
 <script lang="ts">
     import { defineComponent } from "vue";
-    import { getProducts } from "@/services/commercetoolsApi";
-    import type { ProductAllData, ProductApiResponse, SelectOption } from "@/types";
+    import { getProducts, getCategories } from "@/services/commercetoolsApi";
+    import type { ProductAllData, ProductApiResponse, SelectOption, Category } from "@/types";
 
     export default defineComponent({
         name: "ProductsView",
         data() {
+            const allowedFilters = new Set(["minPrice", "maxPrice", "brand", "color", "size", "sortBy"]);
+                        
             return {
                 products: [] as ProductAllData[],
+                categories: [] as Category[],
+                selectedCategory: null as Category | null,
                 isLoading: false,
                 errorMessage: null as string | null,
                 filters: {
@@ -18,6 +22,7 @@
                     size: null as string | null,
                     sortBy: "price_desc"
                 },
+                allowedFilters,
                 searchQuery: "",
                 brands: [] as string[],
                 colors: [] as string[],
@@ -35,8 +40,12 @@
             this.isLoading = true;
 
             try {
-                const response: ProductApiResponse = await getProducts();
-                this.products = response.results;
+                const [productsResponse, categoriesResponse] = await Promise.all([
+                    getProducts(),
+                    getCategories()
+                ]);
+                this.products = productsResponse.results;
+                this.categories = categoriesResponse;
 
                 const brandSet = new Set<string>();
                 const colorSet = new Set<string>();
@@ -78,58 +87,92 @@
         computed: {
             filteredProducts(): ProductAllData[] {
                 const { minPrice, maxPrice, brand, color, size, sortBy } = this.filters;
+                const selectedCategoryId = this.selectedCategory?.id;
 
                 return this.products
-                    .filter((product) => {
-                        const price = product.masterVariant.prices[0].value.centAmount;
+                .filter((product) => {
+                    const price = product.masterVariant.prices[0].value.centAmount;
+                    const productBrand = product.masterVariant.attributes.find(
+                        (attr) => attr.name === "brand"
+                    )?.value.key;
+                    const productColor = product.masterVariant.attributes.find(
+                        (attr) => attr.name === "color"
+                    )?.value.key;
+                    const productSize = product.masterVariant.attributes.find(
+                        (attr) => attr.name === "size"
+                    )?.value.key;
+                    const matchesSearchQuery = product.description?.["en-GB"]
+                        .toLowerCase()
+                        .includes(this.searchQuery.toLowerCase());
 
-                        const productBrand = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "brand"
-                        )?.value.key;
+                    return (
+                        (!selectedCategoryId || product.categories.some((category: string | Category) => {
+                            if (typeof category === "string") {
+                                return category === selectedCategoryId.toString();
+                            }
 
-                        const productColor = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "color"
-                        )?.value.key;
+                            return category.id.toString() === String(selectedCategoryId);
+                        })) &&
+                        (!minPrice || price >= minPrice * 100) &&
+                        (!maxPrice || price <= maxPrice * 100) &&
+                        (!brand || productBrand === brand) &&
+                        (!color || productColor === color) &&
+                        (!size || productSize === size) &&
+                        matchesSearchQuery
+                    );
+                })
+                .sort((a, b) => {
+                    const priceA = a.masterVariant.prices[0].value.centAmount;
+                    const priceB = b.masterVariant.prices[0].value.centAmount;
+                    const nameA = a.name && a.name["en-GB"] ? a.name["en-GB"].toLowerCase() : "";
+                    const nameB = b.name && b.name["en-GB"] ? b.name["en-GB"].toLowerCase() : "";
 
-                        const productSize = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "size"
-                        )?.value.key;
-
-                        const matchesSearchQuery = product.description?.["en-GB"]
-                            .toLowerCase()
-                            .includes(this.searchQuery.toLowerCase());
-
-                        return (
-                            (!minPrice || price >= minPrice * 100) &&
-                            (!maxPrice || price <= maxPrice * 100) &&
-                            (!brand || productBrand === brand) &&
-                            (!color || productColor === color) &&
-                            (!size || productSize === size) &&
-                            matchesSearchQuery
-                        );
-                    })
-                    .sort((a, b) => {
-                        const priceA = a.masterVariant.prices[0].value.centAmount;
-                        const priceB = b.masterVariant.prices[0].value.centAmount;
-                        const nameA = a.name && a.name["en-GB"] ? a.name["en-GB"].toLowerCase() : "";
-                        const nameB = b.name && b.name["en-GB"] ? b.name["en-GB"].toLowerCase() : "";
-
-                        switch (sortBy) {
-                            case "price_asc":
-                                return priceA - priceB;
-                            case "price_desc":
-                                return priceB - priceA;
-                            case "name_asc":
-                                return nameA.localeCompare(nameB);
-                            case "name_desc":
-                                return nameB.localeCompare(nameA);
-                            default:
-                                return 0;
-                        }
-                    });
+                    switch (sortBy) {
+                        case "price_asc":
+                            return priceA - priceB;
+                        case "price_desc":
+                            return priceB - priceA;
+                        case "name_asc":
+                            return nameA.localeCompare(nameB);
+                        case "name_desc":
+                            return nameB.localeCompare(nameA);
+                        default:
+                            return 0;
+                    }
+                });
             }
         },
         methods: {
+            updateFilters(key: string, value: string | number | null) {
+                if (this.allowedFilters.has(key)) {
+                    (this.filters as Record<string, string | number | null>)[key] = value;
+                }
+            },
+            extractAttributes() {
+                const brandSet = new Set<string>();
+                const colorSet = new Set<string>();
+                const sizeSet = new Set<string>();
+
+                this.products.forEach((product) => {
+                    const brand = product.masterVariant.attributes.find(attr => attr.name === "brand")?.value.key;
+                    const color = product.masterVariant.attributes.find(attr => attr.name === "color")?.value.key;
+                    const size = product.masterVariant.attributes.find(attr => attr.name === "size")?.value.key;
+
+                    if (brand) {
+                        brandSet.add(brand);
+                    }
+                    if (color) {
+                        colorSet.add(color);
+                    }
+                    if (size) {
+                        sizeSet.add(size);
+                    }
+                });
+
+                this.brands = Array.from(brandSet);
+                this.colors = Array.from(colorSet);
+                this.sizes = Array.from(sizeSet);
+            },
             formatPrice(amount: number): string {
                 return (amount / 100).toFixed(2);
             },
@@ -142,6 +185,7 @@
                 try {
                     const response: ProductApiResponse = await getProducts();
                     this.products = response.results;
+                    this.extractAttributes();
                 } catch (err) {
                     this.errorMessage = "Failed to fetch products";
                 } finally {
@@ -157,9 +201,7 @@
                     size: null,
                     sortBy: "price_desc"
                 };
-
                 this.applyFilters();
-
                 this.searchQuery = "";
             },
             clearFilters() {
@@ -172,6 +214,14 @@
                     .map((attr) => attr.value.key);
 
                 return colors;
+            },
+            navigateToCategory(category: Category) {
+                this.selectedCategory = category;
+                this.applyFilters();
+            },
+            navigateToHome() {
+                this.selectedCategory = null;
+                this.applyFilters();
             }
         }
     });
@@ -182,10 +232,35 @@
         <v-row>
             <v-col cols="12">
                 <h1 class="text-center">Product Catalog</h1>
+                <v-breadcrumbs>
+                    <v-breadcrumbs-item
+                        :to="{ name: 'home' }"
+                        @click="navigateToHome"
+                    >Home</v-breadcrumbs-item>
+                    <v-breadcrumbs-item
+                        v-for="category in selectedCategory?.path || []"
+                        :key="category.id"
+                        :to="{ name: 'category', params: { id: category.id } }"
+                        @click="navigateToCategory(category)"
+                    >{{ category.name }}</v-breadcrumbs-item>
+                    <v-breadcrumbs-item v-if="selectedCategory">/&nbsp;&nbsp;{{ selectedCategory.name["en-GB"] }}</v-breadcrumbs-item>
+                </v-breadcrumbs>
             </v-col>
         </v-row>
         <v-row>
             <v-col cols="12" md="3">
+                <v-card class="filter-card">
+                    <v-card-title>Categories</v-card-title>
+                    <v-list>
+                        <v-list-item
+                            v-for="category in categories"
+                            :key="category.id"
+                            @click="navigateToCategory(category)"
+                        >
+                            <v-list-item-title>{{ category.name["en-GB"] }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-card>
                 <v-card class="filter-card">
                     <v-card-title>Search</v-card-title>
                     <v-card-text>
@@ -210,8 +285,9 @@
                             :items="sortOptions"
                             label="Sort By"
                             @change="applyFilters"
-                            @click:clear="clearFilters">
-                        </v-select>
+                            @click:clear="resetFilters"
+                            clearable
+                        ></v-select>
                     </v-card-text>
                 </v-card>
                 <v-card class="filter-card">
@@ -234,6 +310,7 @@
                             :items="brands"
                             label="Brand"
                             @change="applyFilters"
+                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-select
@@ -241,6 +318,7 @@
                             :items="colors"
                             label="Color"
                             @change="applyFilters"
+                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-select
@@ -248,6 +326,7 @@
                             :items="sizes"
                             label="Size"
                             @change="applyFilters"
+                            @click:clear="resetFilters"
                             clearable
                         ></v-select>
                         <v-btn @click="resetFilters">Reset Filters</v-btn>
@@ -280,25 +359,15 @@
                                 class="product-image"
                                 height="200px"
                             ></v-img>
-                            <v-card-title class="product-name">
-                                {{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}
-                            </v-card-title>
-                            <v-card-text class="product-description">
-                                {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
-                            </v-card-text>
+                            <v-card-title class="product-name">{{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}</v-card-title>
+                            <v-card-text class="product-description">{{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}</v-card-text>
                             <v-card-subtitle class="price">
                                 <div v-if="product.masterVariant.prices.length">
                                     <template v-if="product.masterVariant.prices[0].discounted">
-                                        <span class="original-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                        </span>
-                                        <span class="discounted-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}
-                                        </span>
+                                        <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
+                                        <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
                                     </template>
-                                    <template v-else>
-                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                    </template>
+                                    <template v-else>€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</template>
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>
@@ -330,25 +399,15 @@
                                 class="product-image"
                                 height="200px"
                             ></v-img>
-                            <v-card-title class="product-name">
-                                {{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}
-                            </v-card-title>
-                            <v-card-text class="product-description">
-                                {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
-                            </v-card-text>
+                            <v-card-title class="product-name">{{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}</v-card-title>
+                            <v-card-text class="product-description">{{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}</v-card-text>
                             <v-card-subtitle class="price">
                                 <div v-if="product.masterVariant.prices.length">
                                     <template v-if="product.masterVariant.prices[0].discounted">
-                                        <span class="original-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                        </span>
-                                        <span class="discounted-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}
-                                        </span>
+                                        <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
+                                        <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
                                     </template>
-                                    <template v-else>
-                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                    </template>
+                                    <template v-else>€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</template>
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>
