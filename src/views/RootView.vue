@@ -41,7 +41,7 @@
             <v-spacer />
 
             <v-btn icon="mdi-magnify"></v-btn>
-            <v-btn icon="mdi-cart-heart"></v-btn>
+            <v-btn to="/basket" icon="mdi-cart-heart"></v-btn>
 
             <template v-slot:append>
                 <v-menu transition="slide-x-transition">

@@ -11,6 +11,7 @@ import RegistrationView from "@/views/RegistrationView.vue";
 import DetailedPageView from "@/views/DetailedPageView.vue";
 import { useAuthStore } from "@/store";
 import ProfileView from "@/views/ProfileView.vue";
+import BasketView from "@/views/BasketView.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +58,11 @@ const router = createRouter({
                     path: "/about",
                     name: "about",
                     component: AboutView
+                },
+                {
+                    path: "/basket",
+                    name: "basket",
+                    component: BasketView
                 }
             ]
         },
