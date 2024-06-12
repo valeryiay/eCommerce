@@ -21,7 +21,7 @@ describe("AboutView.vue", () => {
 
         const valeryiaCard = wrapper.findAllComponents({ name: "v-card" })[0];
         expect(valeryiaCard.find(".v-card-title").text()).toBe("Valeryia Yarash");
-        expect(valeryiaCard.find(".v-card-subtitle").text()).toBe("Job title");
+        expect(valeryiaCard.find(".v-card-subtitle").text()).toBe("Student");
         expect(valeryiaCard.find(".card-text").text()).toContain("Valeryia was instrumental in shaping the visual identity of our project.");
 
         const vitalyCard = wrapper.findAllComponents({ name: "v-card" })[1];

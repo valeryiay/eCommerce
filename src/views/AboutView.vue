@@ -1,10 +1,18 @@
 <template>
     <v-container class="wrapper-container">
         <v-row class="equal-height-cards">
-            <v-col>
+            <v-col class="v-col-profiles">
                 <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
+                    <v-avatar size="200" class="mb-4 mt-2">
+                        <img
+                            height="100%"
+                            min-width="100"
+                            src="@/assets/img/Valeryia.jpg" 
+                            alt="Portrait photo"
+                        >
+                    </v-avatar>
                     <v-card-title class="text-center">Valeryia Yarash</v-card-title>
-                    <v-card-subtitle class="text-center">Job title</v-card-subtitle>
+                    <v-card-subtitle class="text-center">Student</v-card-subtitle>
                     <v-card-text class="card-text">
                         Valeryia was instrumental in shaping the visual identity of our project.
                         She created a comprehensive Figma layout, which served as the blueprint for all our designs.
@@ -23,27 +31,21 @@
 
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
-                    <v-row>
-                        <v-avatar size="100" class="pa-5">
-                            <img
-                                height="100%"
-                                min-width="75"
-                                src="@/assets/img/github2.svg"
-                                alt="Github logo"
-                            >
-                        </v-avatar>
-                        <v-avatar size="100" class="pa-5">
-                            <img
-                                height="100%"
-                                min-width="75"
-                                src="@/assets/img/linkedin.svg"
-                                alt="LinkedIn Logo"
-                            >
-                        </v-avatar>
-                    </v-row>
+                    <div class="social-icons mt-auto d-flex justify-center">
+                        <a href="https://github.com/valeryiay" target="_blank">
+                            <v-avatar size="100" class="pa-5">
+                                <img
+                                    height="100%"
+                                    min-width="75"
+                                    src="@/assets/img/github2.svg"
+                                    alt="Github logo"
+                                >
+                            </v-avatar>
+                        </a>
+                    </div>
                 </v-card>
             </v-col>
-            <v-col>
+            <v-col class="v-col-profiles">
                 <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
                     <v-avatar size="200" class="mb-4 mt-2">
                         <img
@@ -64,7 +66,7 @@
                         He also automated our workflow using GitHub Actions,
                         significantly streamlining our development process.
                         In our SPA, Vitaly made significant
-                        contributions by developing the Registration Page, User Profile Page, and (Page of Sprint 4).
+                        contributions by developing the Registration Page, User Profile Page, and the Basket Page.
                     </v-card-text>
                     <v-card-text class="card-text">
                         Vitaly ensured our CI/CD pipeline was smooth and efficient,
@@ -74,7 +76,7 @@
 
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
-                    <v-row>
+                    <div class="social-icons mt-auto d-flex justify-center">
                         <a href="https://github.com/vetalapo" target="_blank">
                             <v-avatar size="100" class="pa-5">
                                 <img
@@ -85,10 +87,10 @@
                                 >
                             </v-avatar>
                         </a>
-                    </v-row>
+                    </div>
                 </v-card>
             </v-col>
-            <v-col>
+            <v-col class="v-col-profiles">
                 <v-card elevated hover class="v-card-profile d-flex flex-column align-center pa-5 rounded-lg">
                     <v-avatar size="200" class="mb-4 mt-2">
                         <img
@@ -117,7 +119,7 @@
 
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
-                    <v-row>
+                    <div class="social-icons mt-auto d-flex justify-center">
                         <a href="https://github.com/JoMarianek" target="_blank">
                             <v-avatar size="100" class="pa-5">
                                 <img
@@ -138,12 +140,12 @@
                                 >
                             </v-avatar>
                         </a>
-                    </v-row>
+                    </div>
                 </v-card>
             </v-col>
         </v-row>
         <v-row>
-            <v-col>
+            <v-col class="v-col-school">
                 <v-card flat class="footer d-flex flex-column align-center pa-5 rounded-lg">
                     <v-card-text class="card-text text-center">
                         This project was developed during the Frontend Course of Rolling Scopes. Read about the school here:
@@ -159,7 +161,7 @@
                             </v-avatar>
                         </a>
                         <a href="https://github.com/rolling-scopes-school" target="_blank">
-                            <v-avatar size="98" class="pa-2">
+                            <v-avatar size="95" class="pa-2">
                                 <img
                                     height="100%"
                                     src="@/assets/img/github2.svg"
@@ -184,9 +186,19 @@
         background: url("../assets/img/backgroundRegistration.png") center / cover no-repeat;
     }
 
+    .v-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+
+    .v-col-profiles{
+        display: flex;
+    }
+
     .card-text {
         font-size: 18px;
-        text-align: justify;
+        text-align: center;
     }
 
     .equal-height-cards {
@@ -194,15 +206,16 @@
         flex-wrap: wrap;
         padding-left: 160px;
         padding-right: 165px;
-    }
-
-    .v-card-profile {
-        min-height: 1179px;
-        height: auto;
+        min-height: 995px
     }
 
     p {
         font-size: 18px;
+    }
+
+    .v-col-school {
+        padding-left: 172px;
+        padding-right: 177px;
     }
 
     .footer {
