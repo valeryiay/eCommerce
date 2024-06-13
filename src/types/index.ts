@@ -121,6 +121,8 @@ type Category = {
     parentId: number | null;
     ctId: string | null;
     path?: Category[];
+    image: string;
+    active: boolean;
 };
 
 type ProductAllData = {
@@ -285,6 +287,12 @@ interface SelectOption {
     value: string;
 }
 
+interface Slide {
+    title: string;
+    description: string;
+    image: string;
+}
+
 export type {
     BreadcrumbItem,
     Address,
@@ -306,5 +314,6 @@ export type {
     ProductApiResponse,
     Cart,
     CartAPI,
-    SelectOption
+    SelectOption,
+    Slide
 };
