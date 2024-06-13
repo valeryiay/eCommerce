@@ -17,6 +17,9 @@
                 const lastName = this.authStore?.user?.user?.lastName;
 
                 return `${firstName} ${lastName}`;
+            },
+            getCartItemsCount(): number {
+                return this.authStore?.user?.cart?.lineItems.length || 0;
             }
         }
     };
@@ -84,7 +87,21 @@
                 </v-card>
             </v-menu>
 
-            <v-btn id="cart-button" to="/" icon="mdi-cart-heart"></v-btn>
+            <v-btn
+                id="cart-button"
+                class="text-none"
+                to="/basket"
+                stacked
+            >
+                <v-icon v-if="getCartItemsCount === 0">mdi-cart</v-icon>
+                <v-badge
+                    v-else
+                    color="info"
+                    :content="getCartItemsCount"
+                >
+                    <v-icon>mdi-cart-heart</v-icon>
+                </v-badge>
+            </v-btn>
         </v-app-bar>
 
         <v-main class="main page-content-margin">
