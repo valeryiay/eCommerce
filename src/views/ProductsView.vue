@@ -1,41 +1,37 @@
 <script lang="ts">
-    import { defineComponent } from "vue";
+    import { useAuthStore } from "@/store";
     import { getProducts, getCategories } from "@/services/commercetoolsApi";
     import type { ProductAllData, ProductApiResponse, SelectOption, Category } from "@/types";
 
-    export default defineComponent({
-        name: "ProductsView",
-        data() {
-            const allowedFilters = new Set(["minPrice", "maxPrice", "brand", "color", "size", "sortBy"]);
-
-            return {
-                products: [] as ProductAllData[],
-                categories: [] as Category[],
-                selectedCategory: null as Category | null,
-                isLoading: false,
-                errorMessage: null as string | null,
-                filters: {
-                    minPrice: null as number | null,
-                    maxPrice: null as number | null,
-                    brand: null as string | null,
-                    color: null as string | null,
-                    size: null as string | null,
-                    sortBy: "price_desc"
-                },
-                allowedFilters,
-                searchQuery: "",
-                brands: [] as string[],
-                colors: [] as string[],
-                sizes: [] as string[],
-                sortOptions: [
-                    { title: "Price - Low to High", value: "price_asc" },
-                    { title: "Price - High to Low", value: "price_desc" },
-                    { title: "Name - A to Z", value: "name_asc" },
-                    { title: "Name - Z to A", value: "name_desc" }
-                ] as SelectOption[],
-                sortedProducts: [] as ProductAllData[]
-            };
-        },
+    export default {
+        data: () => ({
+            authStore: useAuthStore(),
+            products: [] as ProductAllData[],
+            categories: [] as Category[],
+            selectedCategory: null as Category | null,
+            isLoading: false,
+            errorMessage: null as string | null,
+            filters: {
+                minPrice: null as number | null,
+                maxPrice: null as number | null,
+                brand: null as string | null,
+                color: null as string | null,
+                size: null as string | null,
+                sortBy: "price_desc"
+            },
+            allowedFilters: new Set(["minPrice", "maxPrice", "brand", "color", "size", "sortBy"]),
+            searchQuery: "",
+            brands: [] as string[],
+            colors: [] as string[],
+            sizes: [] as string[],
+            sortOptions: [
+                { title: "Price - Low to High", value: "price_asc" },
+                { title: "Price - High to Low", value: "price_desc" },
+                { title: "Name - A to Z", value: "name_asc" },
+                { title: "Name - Z to A", value: "name_desc" }
+            ] as SelectOption[],
+            sortedProducts: [] as ProductAllData[]
+        }),
         async mounted() {
             this.isLoading = true;
 
@@ -44,6 +40,7 @@
                     getProducts(),
                     getCategories()
                 ]);
+
                 this.products = productsResponse.results;
                 this.categories = categoriesResponse;
 
@@ -220,7 +217,7 @@
             getProductColors(product: ProductAllData): string[] {
                 const colors = product.masterVariant.attributes
                     .filter((attr) => attr.name === "color")
-                    .map((attr) => attr.value.key);
+                    .map((attr) => attr.value.key) || [];
 
                 return colors;
             },
@@ -231,9 +228,16 @@
             navigateToHome() {
                 this.selectedCategory = null;
                 this.applyFilters();
+            },
+            isProductInCart(productId: string): boolean {
+                return this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
+            },
+            async addToCart(productId: string): Promise<void> {
+                // TODO: remove console output and add adding to cart functionality.
+                console.log(productId);
             }
         }
-    });
+    };
 </script>
 
 <template>
@@ -384,6 +388,9 @@
                                 {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
                             </v-card-text>
                             <v-card-subtitle class="price">
+                                <v-btn v-if="isProductInCart(product.id)" class="text-none" icon="mdi-basket-check" @click.stop=""></v-btn>
+                                <v-btn v-else class="text-none" icon="mdi-basket-plus-outline" @click.stop="addToCart(product.id)"></v-btn>
+
                                 <div v-if="product.masterVariant.prices.length">
                                     <template v-if="product.masterVariant.prices[0].discounted">
                                         <span class="original-price">€ {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}</span>
@@ -395,7 +402,7 @@
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>
-                            <v-card-actions>
+                            <v-card-actions v-if="colors.length !== 0">
                                 <v-chip
                                     v-for="color in getProductColors(product)"
                                     :key="color"
@@ -450,7 +457,7 @@
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
                             </v-card-subtitle>
-                            <v-card-actions>
+                            <v-card-actions v-if="colors.length !== 0">
                                 <v-chip
                                     v-for="color in getProductColors(product)"
                                     :key="color"
@@ -524,9 +531,11 @@
     }
 
     .price {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         font-size: 20px;
         color: #099a9a;
-        margin-left: auto;
         text-align: center;
     }
 
