@@ -12,7 +12,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/cat4.jpg",
+                    image: new URL("@/assets/img/cat4.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 },
@@ -22,7 +22,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/cat5.jpg",
+                    image: new URL("@/assets/img/cat5.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 },
@@ -32,7 +32,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/cat6.jpg",
+                    image: new URL("@/assets/img/cat6.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 },
@@ -42,7 +42,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/cat7.jpg",
+                    image: new URL("@/assets/img/cat7.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 },
@@ -52,7 +52,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/books.jpeg",
+                    image: new URL("@/assets/img/cat8.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 },
@@ -62,7 +62,7 @@
                     url: "",
                     parentId: null,
                     ctId: null,
-                    image: "src/assets/img/cat9.jpg",
+                    image: new URL("@/assets/img/cat9.jpg", import.meta.url).href,
                     active: false,
                     path: []
                 }
@@ -75,18 +75,17 @@
                     {
                         title: "Check This Out",
                         description: "Tactical Gear Kit",
-                        image: "src/assets/img/cat1.jpg"
+                        image: new URL("@/assets/img/cat1.jpg", import.meta.url).href
                     },
                     {
                         title: "Gifts Under €50",
-                        description:
-                            "Surprise your beloved ones with a Design gift! For less than €50",
-                        image: "src/assets/img/cat2.jpg"
+                        description: "Surprise your beloved ones with a Design gift! For less than €50",
+                        image: new URL("@/assets/img/cat2.jpg", import.meta.url).href
                     },
                     {
                         title: "Unusual Geek Gadgets",
                         description: "Pac Man and Ghosts Light, Pac Man Collectable Figure Lamp",
-                        image: "src/assets/img/cat3.jpg"
+                        image: new URL("@/assets/img/cat3.jpg", import.meta.url).href
                     }
                 ] as Slide[]
             };
