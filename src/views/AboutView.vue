@@ -7,9 +7,9 @@
                         <img
                             height="100%"
                             min-width="100"
-                            src="@/assets/img/Valeryia.jpg" 
+                            src="@/assets/img/Valeryia.jpg"
                             alt="Portrait photo"
-                        >
+                        />
                     </v-avatar>
                     <v-card-title class="text-center">Valeryia Yarash</v-card-title>
                     <v-card-subtitle class="text-center">Student</v-card-subtitle>
@@ -18,7 +18,7 @@
                         She created a comprehensive Figma layout, which served as the blueprint for all our designs.
                         Her work ensured a consistent and intuitive user experience across the application.
                         For our eCommerce Single Page Application (SPA),
-                        Valeryia designed and developed the Main Page, Catalogue/Product Page, and (Page from Sprint 4).
+                        Valeryia designed and developed the Main Page, Catalogue/Product Page and Basket Page.
                         Her design expertise transformed our vision into a functional and aesthetically pleasing reality.
                     </v-card-text>
                     <v-card-text class="card-text">
@@ -28,7 +28,6 @@
                         us create a cohesive and engaging product.
                         Valeryia's contributions not only enhanced the visual appeal of our application
                         but also played a vital role in achieving our project goals.
-
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
                     <div class="social-icons mt-auto d-flex justify-center">
@@ -39,7 +38,7 @@
                                     min-width="75"
                                     src="@/assets/img/github2.svg"
                                     alt="Github logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                     </div>
@@ -53,7 +52,7 @@
                             min-width="100"
                             src="@/assets/img/vitalii.jpeg"
                             alt="Portrait photo"
-                        >
+                        />
                     </v-avatar>
                     <v-card-title class="text-center">Vitaly Dushkin</v-card-title>
                     <v-card-subtitle class="text-center">Software Engineer</v-card-subtitle>
@@ -73,7 +72,6 @@
                         preventing any bottlenecks in development.
                         His technical skills and problem-solving abilities kept the project on track.
                         Vitaly’s contributions were crucial in meeting all project milestones and delivering a successful application.
-
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
                     <div class="social-icons mt-auto d-flex justify-center">
@@ -84,7 +82,7 @@
                                     min-width="75"
                                     src="@/assets/img/github2.svg"
                                     alt="Github logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                     </div>
@@ -98,7 +96,7 @@
                             min-width="100"
                             src="@/assets/img/joelle.jpeg"
                             alt="Portrait photo"
-                        >
+                        />
                     </v-avatar>
                     <v-card-title class="text-center">Joëlle Marianek</v-card-title>
                     <v-card-subtitle class="text-center">Student</v-card-subtitle>
@@ -116,7 +114,6 @@
                         Her strategic planning and implementation of protocols
                         kept the team focused and productive.
                         Joelle’s contributions were vital in delivering a well-structured and successful application.
-
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
                     <div class="social-icons mt-auto d-flex justify-center">
@@ -127,7 +124,7 @@
                                     min-width="75"
                                     src="@/assets/img/github2.svg"
                                     alt="Github Logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                         <a href="https://www.linkedin.com/in/joelle-marianek-0b604a123/" target="_blank">
@@ -137,7 +134,7 @@
                                     min-width="75"
                                     src="@/assets/img/linkedin.svg"
                                     alt="LinkedIn Logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                     </div>
@@ -157,7 +154,7 @@
                                     height="100%"
                                     src="@/assets/img/rs-school-logo.svg"
                                     alt="Rolling Scopes Logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                         <a href="https://github.com/rolling-scopes-school" target="_blank">
@@ -166,7 +163,7 @@
                                     height="100%"
                                     src="@/assets/img/github2.svg"
                                     alt="Github Logo"
-                                >
+                                />
                             </v-avatar>
                         </a>
                     </v-row>
@@ -180,8 +177,8 @@
     .wrapper-container {
         overflow-x: hidden;
         max-width: 1600px;
-        min-width: 100vw;
-        min-height: 100vh;
+        margin: 0 auto;
+        padding: 20px;
         font-family: Poppins, sans-serif;
         background: url("../assets/img/backgroundRegistration.png") center / cover no-repeat;
     }
@@ -192,7 +189,7 @@
         align-items: stretch;
     }
 
-    .v-col-profiles{
+    .v-col-profiles {
         display: flex;
     }
 
@@ -204,9 +201,7 @@
     .equal-height-cards {
         display: flex;
         flex-wrap: wrap;
-        padding-left: 160px;
-        padding-right: 165px;
-        min-height: 995px
+        min-height: 995px;
     }
 
     p {

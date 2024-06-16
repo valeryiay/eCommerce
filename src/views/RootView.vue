@@ -26,8 +26,9 @@
 </script>
 
 <template>
-    <v-layout>
-        <v-app-bar class="app-bar" dense flat :elevation="8">
+    <v-layout class="wrapper">
+        <v-app-bar dense flat :elevation="8">
+            <v-app-bar-nav-icon class="d-md-none" @click.stop="isDrawerOpen = !isDrawerOpen"></v-app-bar-nav-icon>
             <v-app-bar-title
                 class="app-bar-title cursor-pointer text-h6"
                 @click="$router.push('/')"
@@ -35,16 +36,20 @@
                 Ternion Squad
             </v-app-bar-title>
 
-            <v-btn to="/" prepend-icon="mdi-home" exact>Home</v-btn>
-            <v-btn to="/products" exact>Products</v-btn>
-            <v-btn to="/categories" exact>Categories</v-btn>
-            <v-btn to="/about" exact>About</v-btn>
+            <v-spacer class="d-md-none"></v-spacer>
+
+            <v-toolbar-items class="d-none d-md-flex">
+                <v-btn to="/" prepend-icon="mdi-home" exact>Home</v-btn>
+                <v-btn to="/products" exact>Products</v-btn>
+                <v-btn to="/categories" exact>Categories</v-btn>
+                <v-btn to="/about" exact>About</v-btn>
+            </v-toolbar-items>
 
             <v-spacer />
 
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props, isActive }">
-                    <div class="user-container d-sm-flex cursor-pointer mr-3">
+                    <div class="user-container d-flex align-center cursor-pointer mr-3">
                         <v-card
                             v-if="authStore.isAuthorized"
                             class="mx-auto d-flex align-center"
@@ -58,7 +63,7 @@
                                     src="@/assets/img/default-avatar.svg"
                                 />
                             </v-avatar>
-                            <v-card-text>
+                            <v-card-text class="customer-greeting">
                                 <span id="customer-greeting" class="text-body-1">Hi, {{ getFullCustomerName }}!</span>
                                 <v-icon v-if="isActive" icon="mdi-menu-down"></v-icon>
                                 <v-icon v-else icon="mdi-menu-right"></v-icon>
@@ -87,24 +92,32 @@
                 </v-card>
             </v-menu>
 
-            <v-btn
-                id="cart-button"
-                class="text-none"
-                to="/basket"
-                stacked
-            >
+            <v-btn id="cart-button" class="text-none" to="/basket" stacked>
                 <v-icon v-if="getCartItemsCount === 0">mdi-cart</v-icon>
-                <v-badge
-                    v-else
-                    color="info"
-                    :content="getCartItemsCount"
-                >
+                <v-badge v-else color="info" :content="getCartItemsCount">
                     <v-icon>mdi-cart-heart</v-icon>
                 </v-badge>
             </v-btn>
         </v-app-bar>
 
-        <v-main class="main page-content-margin">
+        <v-navigation-drawer v-model="isDrawerOpen" app temporary class="d-md-none">
+            <v-list>
+                <v-list-item>
+                    <v-btn to="/" prepend-icon="mdi-home" exact>Home</v-btn>
+                </v-list-item>
+                <v-list-item>
+                    <v-btn to="/products" exact>Products</v-btn>
+                </v-list-item>
+                <v-list-item>
+                    <v-btn to="/categories" exact>Categories</v-btn>
+                </v-list-item>
+                <v-list-item>
+                    <v-btn to="/about" exact>About</v-btn>
+                </v-list-item>
+            </v-list>
+        </v-navigation-drawer>
+
+        <v-main class="main">
             <RouterView />
         </v-main>
 
@@ -113,12 +126,19 @@
 </template>
 
 <style scoped>
-    .app-bar {
-        padding-left: 150px;
+    .wrapper {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1600px;
     }
 
-    #cart-button {
-        margin-right: 165px;
+    .customer-greeting {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     @media only screen and (max-width: 600px) {
@@ -141,6 +161,8 @@
 
         .main {
             min-height: 300px;
+            display: flex;
+            align-items: center;
         }
 
         .footer {
@@ -148,9 +170,8 @@
             padding-right: 0;
         }
 
-        .page-content-margin {
-            margin-left: 0;
-            margin-right: 0;
+        .customer-greeting {
+            max-width: calc(100vw - 100px);
         }
     }
 

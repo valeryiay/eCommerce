@@ -80,25 +80,24 @@
             <v-breadcrumbs :items="breadcrumbItems"></v-breadcrumbs>
         </v-row>
 
-        <v-row v-if="loading">
+        <v-row v-if="loading" justify="center">
             <v-progress-circular indeterminate color="primary"></v-progress-circular>
         </v-row>
 
         <v-row v-else-if="product">
-            <v-col class="mr-10">
-                <v-carousel :show-arrows="showArrows">
+            <v-col cols="12" md="6">
+                <v-carousel :show-arrows="showArrows" hide-delimiters>
                     <v-carousel-item
                         v-for="(image, index) in largeImages"
                         :key="index"
                         class="carousel-item"
-                        :src="image.url"
                         @click="showOverlay(index)"
                     >
                         <v-img :src="image.url" class="carousel-image" alt="Product Image"></v-img>
                     </v-carousel-item>
                 </v-carousel>
             </v-col>
-            <v-col>
+            <v-col cols="12" md="6">
                 <v-row class="justify-space-between pa-5">
                     <h2>{{ product.masterData?.current?.name["en-GB"] }}</h2>
                     <div v-if="product.masterData?.current.masterVariant.prices[0]?.discounted">
@@ -125,11 +124,9 @@
             contained
             persistent
         >
-            <v-row class="overlay-wrapper">
-                <v-btn @click="overlayVisible = false">
-                    x
-                </v-btn>
-                <v-carousel :show-arrows="showArrows">
+            <v-row class="overlay-wrapper" justify="center">
+                <v-btn @click="overlayVisible = false" icon="$close"></v-btn>
+                <v-carousel :show-arrows="showArrows" hide-delimiters>
                     <v-carousel-item
                         v-for="(image, index) in largeImages"
                         :key="index"
@@ -169,13 +166,11 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: auto;
-        width: auto;
     }
 
     .carousel-image {
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
         cursor: pointer;
     }
@@ -205,8 +200,8 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: auto;
-        width: auto;
+        height: 100%;
+        width: 100%;
     }
 
     .overlay-image {

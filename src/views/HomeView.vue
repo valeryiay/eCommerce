@@ -99,28 +99,28 @@
 </script>
 
 <template>
-    <v-container class="highlight-carousel">
+    <v-container class="wrapper">
         <v-row>
             <v-col class="sale-container d-flex justify-between align-center">
                 <p>FLASH SALE: Use code TERNION24 to get 25% off selected items</p>
             </v-col>
         </v-row>
         <v-row>
-            <v-carousel height="600" show-arrows="hover" cycle hide-delimiter-background>
+            <v-carousel height="600" show-arrows="hover" cycle hide-delimiter-background class="carousel-item">
                 <v-carousel-item v-for="(slide, index) in slides" :key="index">
                     <v-carousel-item-caption>
                         <h3>{{ slide.title }}</h3>
                         <p>{{ slide.description }}</p>
                     </v-carousel-item-caption>
-                    <img :src="slide.image" alt="Slide Image" />
+                    <img :src="slide.image" alt="Slide Image" class="carousel-image"/>
                 </v-carousel-item>
             </v-carousel>
         </v-row>
         <v-divider class="divider"></v-divider>
         <v-row>
             <v-col cols="12" class="text-center">
-                <h2>Welcome to our store!</h2>
-                <p>We offer a wide range of products to suit your needs.</p>
+                <h1>Welcome to our store!</h1>
+                <h3>We offer a wide range of products to suit your needs.</h3>
             </v-col>
         </v-row>
         <v-divider class="divider"></v-divider>
@@ -140,7 +140,7 @@
                 @mouseleave="toggleHover(index)"
             >
                 <v-card 
-                    :class="{ 'v-card--hover': category.active }" 
+                    :class="{ 'v-card--hover': category.active }"
                     class="mx-auto"
                     :color="category.active ? 'primary' : 'surface-variant'"
                     :image="category.image"
@@ -156,7 +156,7 @@
 </template>
 
 <style scoped>
-    .highlight-carousel {
+    .wrapper {
         max-width: 1600px;
         margin: 0 auto;
         padding: 20px;
@@ -231,30 +231,18 @@
         opacity: 1;
     }
 
-    .v-carousel-item-caption {
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        padding: 40px 20px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        z-index: 1;
-    }
-
-    .v-carousel-item h3 {
+    .carousel-item h3 {
         font-size: 2em;
     }
 
-    .v-carousel-item p {
+    .carousel-item p {
         font-size: 1.2em;
     }
 
-    .v-carousel-item img {
-        display: block;
+    .carousel-image {
         width: 100%;
-        height: auto;
+        height: 100%;
+        object-fit: cover;
     }
 
     .divider {
@@ -270,15 +258,15 @@
             font-size: 18px;
         }
 
-        .v-carousel-item-caption {
-            padding: 30px 15px;
+        .carousel-caption {
+            padding: 15px;
         }
 
-        .v-carousel-item h3 {
+        .carousel-caption h3 {
             font-size: 1.8em;
         }
 
-        .v-carousel-item p {
+        .carousel-caption p {
             font-size: 1em;
         }
 
@@ -304,15 +292,15 @@
             font-size: 16px;
         }
 
-        .v-carousel-item-caption {
-            padding: 20px 10px;
+        .carousel-caption {
+            padding: 10px;
         }
 
-        .v-carousel-item h3 {
+        .carousel-caption h3 {
             font-size: 1.6em;
         }
 
-        .v-carousel-item p {
+        .carousel-caption p {
             font-size: 0.9em;
         }
 
@@ -326,24 +314,24 @@
         .category-card {
             flex-basis: calc(50% - 10px);
             height: auto;
-
-            .category-name {
-                font-size: 16px;
-            }
-
-            .v-carousel-item-caption {
-                padding: 15px 5px;
-            }
-
-            .v-carousel-item h3 {
-                font-size: 1.4em;
-            }
-
-            .v-carousel-item p {
-                font-size: 0.8em;
-            }
         }
-        
+
+        .category-name {
+            font-size: 16px;
+        }
+
+        .carousel-caption {
+            padding: 10px;
+        }
+
+        .carousel-caption h3 {
+            font-size: 1.4em;
+        }
+
+        .carousel-caption p {
+            font-size: 0.8em;
+        }
+
         .v-card {
             width: 160px;
             height: 200px;
@@ -359,15 +347,15 @@
             font-size: 14px;
         }
 
-        .v-carousel-item-caption {
-            padding: 10px 2px;
+        .carousel-caption {
+            padding: 5px;
         }
 
-        .v-carousel-item h3 {
+        .carousel-caption h3 {
             font-size: 1.2em;
         }
 
-        .v-carousel-item p {
+        .carousel-caption p {
             font-size: 0.7em;
         }
 

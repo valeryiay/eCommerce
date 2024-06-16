@@ -30,7 +30,8 @@
                 { title: "Name - A to Z", value: "name_asc" },
                 { title: "Name - Z to A", value: "name_desc" }
             ] as SelectOption[],
-            sortedProducts: [] as ProductAllData[]
+            sortedProducts: [] as ProductAllData[],
+            hoveredCategory: null as number | null
         }),
         async mounted() {
             this.isLoading = true;
@@ -273,15 +274,23 @@
             <v-col cols="12" md="3">
                 <v-card class="filter-card">
                     <v-card-title>Categories</v-card-title>
-                    <v-list>
-                        <v-list-item
-                            v-for="category in categories"
-                            :key="category.id"
-                            @click="navigateToCategory(category)"
-                        >
-                            <v-list-item-title>{{ category.name["en-GB"] }}</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
+                    <v-row>
+                        <v-col cols="12">
+                            <div class="category-buttons">
+                                <v-btn
+                                    v-for="category in categories"
+                                    :key="category.id"
+                                    @click="navigateToCategory(category)"
+                                    class="category-button"
+                                    :class="{ 'active-category': selectedCategory && selectedCategory.id === category.id, 'hover-effect': hoveredCategory === category.id }"
+                                    @mouseover="hoveredCategory = category.id"
+                                    @mouseleave="hoveredCategory = null"
+                                >
+                                    {{ category.name["en-GB"] }}
+                                </v-btn>
+                            </div>
+                        </v-col>
+                    </v-row>
                 </v-card>
                 <v-card class="filter-card">
                     <v-card-title>Search</v-card-title>
@@ -483,6 +492,22 @@
 
     .text-center {
         text-align: center;
+    }
+
+    .category-buttons {
+        text-align: center;
+    }
+
+    .category-button {
+        margin: 1px 10px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        color: #999;
+    }
+
+    .category-button.hover-effect,
+    .category-button.active-category {
+        background-color: #099a9a;
+        color: white;
     }
 
     .product-card {
