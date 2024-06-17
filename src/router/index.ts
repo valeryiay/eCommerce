@@ -3,7 +3,6 @@ import RootView from "@/views/RootView.vue";
 import HomeView from "@/views/HomeView.vue";
 import AboutView from "@/views/AboutView.vue";
 import ProductsView from "@/views/ProductsView.vue";
-import CategoriesView from "@/views/CategoriesView.vue";
 import LoginView from "@/views/LoginView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
 import RegistrationView from "@/views/RegistrationView.vue";
@@ -34,11 +33,6 @@ const router = createRouter({
                     path: "/products/:id",
                     name: "detailed",
                     component: DetailedPageView
-                },
-                {
-                    path: "/categories",
-                    name: "categories",
-                    component: CategoriesView
                 },
                 {
                     path: "/profile",

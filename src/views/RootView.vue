@@ -27,21 +27,19 @@
 
 <template>
     <v-layout class="wrapper">
-        <v-app-bar dense flat :elevation="8">
+        <v-app-bar class="app-bar" dense flat :elevation="8">
             <v-app-bar-nav-icon class="d-md-none" @click.stop="isDrawerOpen = !isDrawerOpen"></v-app-bar-nav-icon>
+
             <v-app-bar-title
-                class="app-bar-title cursor-pointer text-h6"
+                class="app-bar-title cursor-pointer text-h6 mr-10"
                 @click="$router.push('/')"
             >
                 Ternion Squad
             </v-app-bar-title>
 
-            <v-spacer class="d-md-none"></v-spacer>
-
-            <v-toolbar-items class="d-none d-md-flex">
+            <v-toolbar-items class="d-none d-md-flex ml-10">
                 <v-btn to="/" prepend-icon="mdi-home" exact>Home</v-btn>
                 <v-btn to="/products" exact>Products</v-btn>
-                <v-btn to="/categories" exact>Categories</v-btn>
                 <v-btn to="/about" exact>About</v-btn>
             </v-toolbar-items>
 
@@ -94,8 +92,12 @@
 
             <v-btn id="cart-button" class="text-none" to="/basket" stacked>
                 <v-icon v-if="getCartItemsCount === 0">mdi-cart</v-icon>
-                <v-badge v-else color="info" :content="getCartItemsCount">
-                    <v-icon>mdi-cart-heart</v-icon>
+                <v-badge
+                    v-else
+                    color="#099a9a"
+                    :content="getCartItemsCount"
+                >
+                    <v-icon id="cart-button-badge-icon">mdi-cart-heart</v-icon>
                 </v-badge>
             </v-btn>
         </v-app-bar>
@@ -130,6 +132,11 @@
         margin: 0 auto;
         width: 100%;
         max-width: 1600px;
+        position: unset !important;
+    }
+
+    .app-bar-title {
+        flex: none;
     }
 
     .customer-greeting {
@@ -141,16 +148,20 @@
         max-width: 100%;
     }
 
+    .app-bar {
+        padding-left: 130px;
+    }
+
+    #cart-button {
+        margin-right: 125px;
+    }
+
     @media only screen and (max-width: 600px) {
         .app-bar {
             padding-left: 0;
         }
 
-        .app-bar-title {
-            margin-right: 0;
-        }
-
-        .user-container {
+        .app-bar-title, .user-container {
             margin-right: 0;
         }
 

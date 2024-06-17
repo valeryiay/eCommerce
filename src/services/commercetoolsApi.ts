@@ -431,7 +431,7 @@ export async function createCart(accessToken: string): Promise<Cart> {
                 Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ currency: "USD" })
+            body: JSON.stringify({ currency: "EUR" })
         });
 
         const responseData = await response.json();
@@ -540,9 +540,9 @@ export async function getUser(credentials: Credentials): Promise<CustomerWithTok
 
         try {
             const userCarts = await getMyCarts(userToken.access_token);
+
             if (userCarts.count) {
-                const cart = userCarts.results[0];
-                userCart = cart;
+                userCart = userCarts.results[0];
             } else {
                 throw new Error("CT_NO_CART_ERROR");
             }

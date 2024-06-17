@@ -149,6 +149,7 @@ type ProductAllData = {
         prices: {
             value: {
                 centAmount: number;
+                currencyCode: string;
             };
             discounted: {
                 value: {

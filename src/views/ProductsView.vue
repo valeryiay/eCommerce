@@ -1,7 +1,7 @@
 <script lang="ts">
     import { useAuthStore } from "@/store";
-    import { getProducts, getCategories } from "@/services/commercetoolsApi";
-    import type { ProductAllData, ProductApiResponse, SelectOption, Category } from "@/types";
+    import { getProducts, getCategories, getMyCarts, createCart, addProductToCart, getAnonymousUser } from "@/services/commercetoolsApi";
+    import type { ProductAllData, ProductApiResponse, SelectOption, Category, CustomerWithToken } from "@/types";
 
     export default {
         data: () => ({
@@ -31,7 +31,11 @@
                 { title: "Name - Z to A", value: "name_desc" }
             ] as SelectOption[],
             sortedProducts: [] as ProductAllData[],
-            hoveredCategory: null as number | null
+            hoveredCategory: null as number | null,
+            notification: {
+                isDisplay: false,
+                message: ""
+            }
         }),
         async mounted() {
             this.isLoading = true;
@@ -231,11 +235,55 @@
                 this.applyFilters();
             },
             isProductInCart(productId: string): boolean {
-                return this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
+                return Boolean(this.authStore?.user?.token) && this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
             },
-            async addToCart(productId: string): Promise<void> {
-                // TODO: remove console output and add adding to cart functionality.
-                console.log(productId);
+            async addToCart(productId: string, quantity: number = 1): Promise<void> {
+                this.notification.message = "";
+
+                // If anonymous user, creating temporary session
+                if (!this.authStore.user?.token) {
+                    const anonymousUser = await getAnonymousUser();
+                    this.authStore.updateUserData(anonymousUser as CustomerWithToken);
+                }
+
+                let userCart = this.authStore.user?.cart;
+
+                if (!userCart) {
+                    try {
+                        const userCarts = await getMyCarts(this.authStore.user?.token?.access_token || "");
+
+                        if (userCarts.count) {
+                            userCart = userCarts.results[0];
+                        } else {
+                            throw new Error("CT_NO_CART_ERROR");
+                        }
+                    } catch (error) {
+                        userCart = await createCart(this.authStore.user!.token.access_token);
+                    }
+                }
+
+                try {
+                    const cartResult = await addProductToCart(
+                        this.authStore.user?.token?.access_token || "",
+                        productId,
+                        userCart!.id,
+                        userCart!.version,
+                        quantity
+                    );
+
+                    if (cartResult instanceof Error) {
+                        throw Error(cartResult.message);
+                    }
+
+                    this.authStore.updateUserData({
+                        user: this.authStore.user?.user || null,
+                        cart: cartResult,
+                        token: this.authStore!.user!.token
+                    });
+                } catch (error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
             }
         }
     };
@@ -397,7 +445,12 @@
                                 {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
                             </v-card-text>
                             <v-card-subtitle class="price">
-                                <v-btn v-if="isProductInCart(product.id)" class="text-none" icon="mdi-basket-check" @click.stop=""></v-btn>
+                                <v-btn
+                                    v-if="isProductInCart(product.id)"
+                                    class="text-none added-to-cart-button"
+                                    icon="mdi-basket-check"
+                                    @click.stop=""
+                                ></v-btn>
                                 <v-btn v-else class="text-none" icon="mdi-basket-plus-outline" @click.stop="addToCart(product.id)"></v-btn>
 
                                 <div v-if="product.masterVariant.prices.length">
@@ -406,7 +459,7 @@
                                         <span class="discounted-price">€ {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}</span>
                                     </template>
                                     <template v-else>
-                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
+                                        € {{ formatPrice(product.masterVariant.prices.filter((price) => price.value.currencyCode === "EUR")[0].value.centAmount) }}
                                     </template>
                                 </div>
                                 <span v-else class="no-price">No Price Available</span>
@@ -479,6 +532,19 @@
                 </v-row>
             </v-col>
         </v-row>
+        <v-snackbar v-model="notification.isDisplay" multi-line>
+            {{ notification.message }}
+
+            <template v-slot:actions>
+                <v-btn
+                    color="red"
+                    variant="text"
+                    @click="notification.isDisplay = false"
+                >
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 </template>
 
@@ -595,5 +661,9 @@
         height: 24px;
         border-radius: 50%;
         margin-right: 4px;
+    }
+
+    .added-to-cart-button {
+        background-color: #099a9a;
     }
 </style>

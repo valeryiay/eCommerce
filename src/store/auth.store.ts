@@ -10,8 +10,8 @@ const getLocalStorageUserData = (): CustomerWithToken | null =>
 
 const userData = getLocalStorageUserData();
 
-const hasTokenStored = (): boolean => {
-    if (userData?.token) {
+const hasUserDataStored = (): boolean => {
+    if (userData?.user) {
         return true;
     }
 
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore({
     id: "auth",
     state: () => ({
         user: userData,
-        isAuthorized: hasTokenStored()
+        isAuthorized: hasUserDataStored()
     }),
     actions: {
         async logIn(credentials: Credentials) {

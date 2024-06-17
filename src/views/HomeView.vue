@@ -106,24 +106,38 @@
             </v-col>
         </v-row>
         <v-row>
-            <v-carousel height="600" show-arrows="hover" cycle hide-delimiter-background class="carousel-item">
-                <v-carousel-item v-for="(slide, index) in slides" :key="index">
-                    <v-carousel-item-caption>
-                        <h3>{{ slide.title }}</h3>
-                        <p>{{ slide.description }}</p>
-                    </v-carousel-item-caption>
-                    <img :src="slide.image" alt="Slide Image" class="carousel-image"/>
+            <v-carousel
+                class="carousel-item"
+                height="600"
+                show-arrows="hover"
+                cycle
+                hide-delimiter-background
+            >
+                <v-carousel-item
+                    v-for="(slide, index) in slides"
+                    :key="index"
+                    :src="slide.image"
+                    cover
+                >
+                    <v-card color="#099a9ac0" width="400" height="150" class="ma-10">
+                        <v-card-title class="text-h4 font-weight-black">{{ slide.title }}</v-card-title>
+                        <v-card-text class="text-subtitle-1 font-weight-bold">{{ slide.description }}</v-card-text>
+                    </v-card>
                 </v-carousel-item>
             </v-carousel>
         </v-row>
-        <v-divider class="divider"></v-divider>
+
+        <v-divider class="divider mt-15"></v-divider>
+
         <v-row>
             <v-col cols="12" class="text-center">
                 <h1>Welcome to our store!</h1>
                 <h3>We offer a wide range of products to suit your needs.</h3>
             </v-col>
         </v-row>
-        <v-divider class="divider"></v-divider>
+
+        <v-divider class="divider mb-15"></v-divider>
+
         <v-row>
             <h2 class="text-center">Shop by Category</h2>
         </v-row>
@@ -139,7 +153,7 @@
                 @mouseover="toggleHover(index)"
                 @mouseleave="toggleHover(index)"
             >
-                <v-card 
+                <v-card
                     :class="{ 'v-card--hover': category.active }"
                     class="mx-auto"
                     :color="category.active ? 'primary' : 'surface-variant'"
@@ -179,6 +193,7 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+        margin-bottom: 100px;
     }
 
     .category-card {
@@ -229,20 +244,6 @@
 
     .category-card:hover .category-name {
         opacity: 1;
-    }
-
-    .carousel-item h3 {
-        font-size: 2em;
-    }
-
-    .carousel-item p {
-        font-size: 1.2em;
-    }
-
-    .carousel-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
     }
 
     .divider {
