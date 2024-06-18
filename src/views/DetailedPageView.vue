@@ -1,13 +1,23 @@
 <script lang="ts">
-    import { getProductDetails } from "@/services/commercetoolsApi";
-    import type { BreadcrumbItem, ProductSingle } from "@/types";
+    import { getProductDetails, getMyCarts, createCart, addProductToCart, getAnonymousUser, removeProductFromCart } from "@/services/commercetoolsApi";
+    import type { BreadcrumbItem, ProductSingle, CustomerWithToken } from "@/types";
+    import { useAuthStore } from "@/store";
 
     export default {
         data: () => ({
             product: {} as ProductSingle,
             loading: true,
             overlayVisible: false,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            authStore: useAuthStore(),
+            message: "",
+            messageIcon: "",
+            messageColor: "",
+            iconColor: "",
+            notification: {
+                isDisplay: false,
+                message: ""
+            }
         }),
         async mounted() {
             const productID = this.$route.params.id as string;
@@ -41,6 +51,103 @@
             showOverlay(index: number) {
                 this.currentImageIndex = index;
                 this.overlayVisible = true;
+            },
+            displayMessage(message: string, icon: string, iconColor: string) {
+                this.message = message;
+                this.messageIcon = icon;
+                this.iconColor = iconColor;
+
+                setTimeout(() => {
+                    this.message = "";
+                }, 3000);
+            },
+            async handleCartAction() {
+                if (this.isProductInCart(this.product.id)) {
+                    await this.removeFromCart(this.product.id);
+                    this.displayMessage("Item removed from the cart", "mdi-close-circle", "text-red");
+                } else {
+                    await this.addToCart(this.product.id);
+                    this.displayMessage("Item added to the cart", "mdi-check-circle", "text-green");
+                }
+            },
+            isProductInCart(productId: string): boolean {
+                return Boolean(this.authStore?.user?.token) &&
+                    this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
+            },
+            async addToCart(productId: string, quantity: number = 1): Promise<void> {
+                this.notification.message = "";
+
+                // If anonymous user, creating temporary session
+                if (!this.authStore.user?.token) {
+                    const anonymousUser = await getAnonymousUser();
+                    this.authStore.updateUserData(anonymousUser as CustomerWithToken);
+                }
+
+                let userCart = this.authStore.user?.cart;
+
+                if (!userCart) {
+                    try {
+                        const userCarts = await getMyCarts(this.authStore.user?.token?.access_token || "");
+
+                        if (userCarts.count) {
+                            userCart = userCarts.results[0];
+                        } else {
+                            throw new Error("CT_NO_CART_ERROR");
+                        }
+                    } catch (error) {
+                        userCart = await createCart(this.authStore.user!.token.access_token);
+                    }
+                }
+
+                try {
+                    const cartResult = await addProductToCart(
+                        this.authStore.user?.token?.access_token || "",
+                        productId,
+                        userCart!.id,
+                        userCart!.version,
+                        quantity
+                    );
+
+                    if (cartResult instanceof Error) {
+                        throw Error(cartResult.message);
+                    }
+
+                    this.authStore.updateUserData({
+                        user: this.authStore.user?.user || null,
+                        cart: cartResult,
+                        token: this.authStore!.user!.token
+                    });
+                } catch (error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
+            },
+            async removeFromCart(productId: string, quantity: number = 1): Promise<void> {
+                const lineItem = this.authStore.user?.cart?.lineItems.find((item) => item.productId === productId);
+                if (!lineItem) {
+                    return;
+                }
+                this.notification.message = "";
+                try {
+                    const cartResult = await removeProductFromCart(
+                        this.authStore.user?.token?.access_token || "",
+                        lineItem.id,
+                        this.authStore.user?.cart!.id || "",
+                        this.authStore.user?.cart!.version,
+                        quantity
+                    );
+                    if (cartResult instanceof Error) {
+                        throw Error(cartResult.message);
+                    }
+                    this.authStore.updateUserData({
+                        user: this.authStore.user?.user || null,
+                        cart: cartResult,
+                        token: this.authStore!.user!.token
+                    });
+                } catch (error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
             }
         },
         computed: {
@@ -111,7 +218,27 @@
                     </div>
                 </v-row>
                 <v-row class="pa-5">
-                    <p>{{ product.masterData?.current?.description["en-GB"] }}</p>
+                    <p class="pb-6">{{ product.masterData?.current?.description["en-GB"] }}</p>
+                </v-row>
+                <v-row class="justify-center">
+                    <v-divider class="pa-5"></v-divider>
+                    <v-btn 
+                        size="x-large"
+                        rounded="sm"
+                        :prepend-icon="isProductInCart(product.id) ? 'mdi-cart-off' : 'mdi-cart-plus'"
+                        :color="isProductInCart(product.id) ? '#ea7575' : '#158a8a'"
+                        :text="isProductInCart(product.id) ? 'Remove from cart' : 'Add to cart'"
+                        @click="handleCartAction"
+                    >
+                    </v-btn>
+                </v-row>
+                <v-row class="text-caption justify-center pa-4">
+                    <transition name="fade">
+                        <p v-if="message" class="text-grey">
+                            <v-icon :class="iconColor">{{ messageIcon }}</v-icon>
+                            {{ message }}
+                        </p>
+                    </transition>
                 </v-row>
             </v-col>
         </v-row>
@@ -211,5 +338,13 @@
         max-height: 80vh;
         object-fit: contain;
         margin: auto;
+    }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity 1s;
+    }
+
+    .fade-enter, .fade-leave-to {
+        opacity: 0;
     }
 </style>
