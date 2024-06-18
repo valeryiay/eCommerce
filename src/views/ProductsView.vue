@@ -2,11 +2,14 @@
     import { useAuthStore } from "@/store";
     import { getProducts, getCategories, getMyCarts, createCart, addProductToCart, getAnonymousUser } from "@/services/commercetoolsApi";
     import type { ProductAllData, ProductApiResponse, SelectOption, Category, CustomerWithToken } from "@/types";
+    import { PRODUCTS_ON_PAGE } from "@/constants";
 
     export default {
         data: () => ({
             authStore: useAuthStore(),
             products: [] as ProductAllData[],
+            productsCurrentPage: 1,
+            productsTotalPages: 0,
             categories: [] as Category[],
             selectedCategory: null as Category | null,
             isLoading: false,
@@ -14,9 +17,6 @@
             filters: {
                 minPrice: null as number | null,
                 maxPrice: null as number | null,
-                brand: null as string | null,
-                color: null as string | null,
-                size: null as string | null,
                 sortBy: "price_desc"
             },
             allowedFilters: new Set(["minPrice", "maxPrice", "brand", "color", "size", "sortBy"]),
@@ -42,11 +42,12 @@
 
             try {
                 const [productsResponse, categoriesResponse] = await Promise.all([
-                    getProducts(),
+                    getProducts(undefined, this.productsCurrentPage - 1),
                     getCategories()
                 ]);
 
                 this.products = productsResponse.results;
+                this.productsTotalPages = Math.ceil(productsResponse.total / PRODUCTS_ON_PAGE);
                 this.categories = categoriesResponse;
 
                 const brandSet = new Set<string>();
@@ -90,24 +91,12 @@
         },
         computed: {
             filteredProducts(): ProductAllData[] {
-                const { minPrice, maxPrice, brand, color, size, sortBy } = this.filters;
+                const { minPrice, maxPrice, sortBy } = this.filters;
                 const selectedCategoryId = this.selectedCategory?.id;
 
                 return this.products
                     .filter((product) => {
                         const price = product.masterVariant.prices[0].value.centAmount;
-
-                        const productBrand = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "brand"
-                        )?.value.key;
-
-                        const productColor = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "color"
-                        )?.value.key;
-
-                        const productSize = product.masterVariant.attributes.find(
-                            (attr) => attr.name === "size"
-                        )?.value.key;
 
                         const matchesSearchQuery = product.description?.["en-GB"]
                             .toLowerCase()
@@ -123,9 +112,6 @@
                             })) &&
                             (!minPrice || price >= minPrice * 100) &&
                             (!maxPrice || price <= maxPrice * 100) &&
-                            (!brand || productBrand === brand) &&
-                            (!color || productColor === color) &&
-                            (!size || productSize === size) &&
                             matchesSearchQuery
                         );
                     })
@@ -206,9 +192,6 @@
                 this.filters = {
                     minPrice: null,
                     maxPrice: null,
-                    brand: null,
-                    color: null,
-                    size: null,
                     sortBy: "price_desc"
                 };
 
@@ -226,16 +209,18 @@
 
                 return colors;
             },
-            navigateToCategory(category: Category) {
+            async navigateToCategory(category: Category) {
                 this.selectedCategory = category;
-                this.applyFilters();
+
+                this.products = (await getProducts([String(category.id) || ""], 0)).results;
             },
             navigateToHome() {
                 this.selectedCategory = null;
                 this.applyFilters();
             },
             isProductInCart(productId: string): boolean {
-                return Boolean(this.authStore?.user?.token) && this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
+                return Boolean(this.authStore?.user?.token) &&
+                    this.authStore.user?.cart?.lineItems.findIndex((item) => item.productId === productId) !== -1;
             },
             async addToCart(productId: string, quantity: number = 1): Promise<void> {
                 this.notification.message = "";
@@ -284,35 +269,24 @@
                     this.notification.message = String(error);
                     this.notification.isDisplay = true;
                 }
+            },
+            async onPaginationUpdate(pagination: number): Promise<void> {
+                this.products = (await getProducts(undefined, pagination - 1)).results;
+                window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
             }
         }
     };
 </script>
 
 <template>
-    <v-container class="catalog-container" fluid>
+    <v-container id="products-catalog-container" class="catalog-container" fluid>
         <v-row>
             <v-col cols="12">
                 <h1 class="text-center">Product Catalog</h1>
 
                 <v-breadcrumbs>
-                    <v-breadcrumbs-item
-                        :to="{ name: 'home' }"
-                        @click="navigateToHome"
-                    >
-                        Home
-                    </v-breadcrumbs-item>
-
-                    <v-breadcrumbs-item
-                        v-for="category in selectedCategory?.path || []"
-                        :key="category.id"
-                        :to="{ name: 'category', params: { id: category.id } }"
-                        @click="navigateToCategory(category)"
-                    >
-                        {{ category.name }}
-                    </v-breadcrumbs-item>
-
-                    <v-breadcrumbs-item v-if="selectedCategory">
+                    <v-breadcrumbs-item @click="navigateToHome" class="cursor-pointer">Products</v-breadcrumbs-item>
+                    <v-breadcrumbs-item v-if="selectedCategory" class="cursor-default">
                         /&nbsp;&nbsp;{{ selectedCategory.name["en-GB"] }}
                     </v-breadcrumbs-item>
                 </v-breadcrumbs>
@@ -384,30 +358,7 @@
                             type="number"
                             @change="applyFilters"
                         ></v-text-field>
-                        <v-select
-                            v-model="filters.brand"
-                            :items="brands"
-                            label="Brand"
-                            @change="applyFilters"
-                            @click:clear="resetFilters"
-                            clearable
-                        ></v-select>
-                        <v-select
-                            v-model="filters.color"
-                            :items="colors"
-                            label="Color"
-                            @change="applyFilters"
-                            @click:clear="resetFilters"
-                            clearable
-                        ></v-select>
-                        <v-select
-                            v-model="filters.size"
-                            :items="sizes"
-                            label="Size"
-                            @change="applyFilters"
-                            @click:clear="resetFilters"
-                            clearable
-                        ></v-select>
+
                         <v-btn @click="resetFilters">Reset Filters</v-btn>
                     </v-card-text>
                 </v-card>
@@ -475,59 +426,16 @@
                         </v-card>
                     </v-col>
                 </v-row>
-                <v-row
-                    v-if="sortedProducts.length"
-                    class="products-grid"
-                    dense
-                    justify="center"
-                >
-                    <v-col
-                        v-for="product in sortedProducts"
-                        :key="product.id"
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="3"
-                    >
-                        <v-card class="product-card" elevation="2" @click="goToDetailedProduct(product.id)">
-                            <v-img
-                                v-if="product.masterVariant.images.length"
-                                :src="product.masterVariant.images[0].url"
-                                alt="Product Image"
-                                class="product-image"
-                                height="200px"
-                            ></v-img>
-                            <v-card-title class="product-name">
-                                {{ product.name && product.name["en-GB"] ? product.name["en-GB"] : "Name Not Available" }}
-                            </v-card-title>
-                            <v-card-text class="product-description">
-                                {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
-                            </v-card-text>
-                            <v-card-subtitle class="price">
-                                <div v-if="product.masterVariant.prices.length">
-                                    <template v-if="product.masterVariant.prices[0].discounted">
-                                        <span class="original-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                        </span>
-                                        <span class="discounted-price">
-                                            € {{ formatPrice(product.masterVariant.prices[0].discounted.value.centAmount) }}
-                                        </span>
-                                    </template>
-                                    <template v-else>
-                                        € {{ formatPrice(product.masterVariant.prices[0].value.centAmount) }}
-                                    </template>
-                                </div>
-                                <span v-else class="no-price">No Price Available</span>
-                            </v-card-subtitle>
-                            <v-card-actions v-if="colors.length !== 0">
-                                <v-chip
-                                    v-for="color in getProductColors(product)"
-                                    :key="color"
-                                    :style="{ backgroundColor: color }"
-                                    class="color-chip"
-                                ></v-chip>
-                            </v-card-actions>
-                        </v-card>
+                <v-row v-if="!selectedCategory && searchQuery === '' && !filters.minPrice && !filters.maxPrice" justify="center">
+                    <v-col cols="8">
+                        <v-container class="max-width">
+                            <v-pagination
+                                v-model="productsCurrentPage"
+                                :length="productsTotalPages"
+                                class="my-4"
+                                @update:modelValue="onPaginationUpdate"
+                            ></v-pagination>
+                        </v-container>
                     </v-col>
                 </v-row>
             </v-col>

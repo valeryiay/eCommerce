@@ -27,8 +27,7 @@ import type {
     ProductSingle
 } from "@/types";
 
-import { PRODUCTS_ON_PAGE, MAX_PRICE_FILTER } from "../constants";
-import { getCategoryCtIds } from "../utils/getCategoryCtIds";
+import { PRODUCTS_ON_PAGE, MAX_PRICE_FILTER } from "@/constants";
 
 interface ErrorObject {
     code: string;
@@ -672,7 +671,7 @@ export async function registerUser(userRegisterData: RegisterUser): Promise<Cust
 }
 
 export async function getProducts(
-    category: string = "",
+    categoryIds: string[] = [],
     page: number = 0,
     sort: string = "price asc",
     brands: string[] = [],
@@ -681,8 +680,7 @@ export async function getProducts(
     maxPrice: number = MAX_PRICE_FILTER,
     text: string = ""
 ): Promise<ProductApiResponse> {
-    const ctIds = getCategoryCtIds(category);
-    const categoriesFilter = ctIds.map((cat) => `"${cat}"`).join(",");
+    const categoriesFilter = categoryIds.map((id) => `"${id}"`).join(",");
 
     let queryString = createQueryString({
         filter: categoriesFilter ? `categories.id:${categoriesFilter}` : "",
