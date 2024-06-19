@@ -284,8 +284,8 @@
                 </RouterLink>
             </v-card-text>
             <v-card-text>
-                <p class="text-red-lighten-1 text-decoration-none cursor-pointer pr-15">
-                    <strong class="mr-1" @click="clearCart">Clear Cart</strong>
+                <p class="text-red-lighten-1 text-decoration-none cursor-pointer pr-15" @click="clearCart">
+                    <strong class="mr-1">Clear Cart</strong>
                     <v-icon icon="mdi-backspace"></v-icon>
                 </p>
             </v-card-text>
