@@ -206,7 +206,11 @@ type ProductApiResponse = {
 interface LineItem {
     id: string;
     productId: string;
-    name: string;
+    name: {
+        "en-US": string,
+        "en-GB": string,
+        "de-DE": string
+    };
     price: {
         value: {
             centAmount: number;

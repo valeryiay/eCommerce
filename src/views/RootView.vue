@@ -123,7 +123,7 @@
             <RouterView />
         </v-main>
 
-        <v-footer class="footer justify-center" app>@Copyright {{ currentYear }}</v-footer>
+        <v-footer class="footer justify-center" app>© 2023-{{ currentYear }}, Ternion Squad, Inc. or its affiliates</v-footer>
     </v-layout>
 </template>
 

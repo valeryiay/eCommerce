@@ -175,12 +175,8 @@
 
 <style scoped>
     .wrapper-container {
-        overflow-x: hidden;
-        max-width: 1600px;
-        margin: 0 auto;
         padding: 20px;
         font-family: Poppins, sans-serif;
-        background: url("../assets/img/backgroundRegistration.png") center / cover no-repeat;
     }
 
     .v-row {

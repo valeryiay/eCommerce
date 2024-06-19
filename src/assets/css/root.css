@@ -4,3 +4,7 @@
 #cart-button-badge-icon + span {
     margin-left: 5px;
 }
+
+#basket-quantity-field {
+    text-align: center;
+}

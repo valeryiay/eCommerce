@@ -1,6 +1,16 @@
 <script lang="ts">
     import { useAuthStore } from "@/store";
-    import { getProducts, getCategories, getMyCarts, createCart, addProductToCart, getAnonymousUser } from "@/services/commercetoolsApi";
+
+    import {
+        getProducts,
+        getCategories,
+        getMyCarts,
+        createCart,
+        addProductToCart,
+        getAnonymousUser,
+        removeProductFromCart
+    } from "@/services/commercetoolsApi";
+
     import type { ProductAllData, ProductApiResponse, SelectOption, Category, CustomerWithToken } from "@/types";
     import { PRODUCTS_ON_PAGE } from "@/constants";
 
@@ -98,9 +108,7 @@
                     .filter((product) => {
                         const price = product.masterVariant.prices[0].value.centAmount;
 
-                        const matchesSearchQuery = product.description?.["en-GB"]
-                            .toLowerCase()
-                            .includes(this.searchQuery.toLowerCase());
+                        const matchesSearchQuery = product.description?.["en-GB"]?.toLowerCase()?.includes(this.searchQuery.toLowerCase()) || "";
 
                         return (
                             (!selectedCategoryId || product.categories.some((category: string | Category) => {
@@ -197,6 +205,7 @@
 
                 this.applyFilters();
                 this.searchQuery = "";
+                this.productsCurrentPage = 1;
             },
             clearFilters() {
                 this.filters.sortBy = "price_desc";
@@ -216,6 +225,7 @@
             },
             navigateToHome() {
                 this.selectedCategory = null;
+                this.productsCurrentPage = 1;
                 this.applyFilters();
             },
             isProductInCart(productId: string): boolean {
@@ -253,6 +263,38 @@
                         productId,
                         userCart!.id,
                         userCart!.version,
+                        quantity
+                    );
+
+                    if (cartResult instanceof Error) {
+                        throw Error(cartResult.message);
+                    }
+
+                    this.authStore.updateUserData({
+                        user: this.authStore.user?.user || null,
+                        cart: cartResult,
+                        token: this.authStore!.user!.token
+                    });
+                } catch (error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
+            },
+            async removeFromCart(productId: string, quantity: number = 1): Promise<void> {
+                const lineItem = this.authStore.user?.cart?.lineItems.find((item) => item.productId === productId);
+
+                if (!lineItem) {
+                    return;
+                }
+
+                this.notification.message = "";
+
+                try {
+                    const cartResult = await removeProductFromCart(
+                        this.authStore.user?.token?.access_token || "",
+                        lineItem.id,
+                        this.authStore.user?.cart!.id || "",
+                        this.authStore.user?.cart!.version,
                         quantity
                     );
 
@@ -396,12 +438,24 @@
                                 {{ product.description && product.description["en-GB"] ? product.description["en-GB"] : "Description Not Available" }}
                             </v-card-text>
                             <v-card-subtitle class="price">
-                                <v-btn
-                                    v-if="isProductInCart(product.id)"
-                                    class="text-none added-to-cart-button"
-                                    icon="mdi-basket-check"
-                                    @click.stop=""
-                                ></v-btn>
+                                <v-hover v-if="isProductInCart(product.id)">
+                                    <template v-slot:default="{ isHovering, props }">
+                                        <v-btn
+                                            v-if="isHovering"
+                                            v-bind="props"
+                                            class="text-none delete-from-cart-button"
+                                            icon="mdi-delete"
+                                            @click.stop="removeFromCart(product.id)"
+                                        ></v-btn>
+                                        <v-btn
+                                            v-else
+                                            v-bind="props"
+                                            class="text-none added-to-cart-button"
+                                            icon="mdi-basket-check"
+                                            @click.stop=""
+                                        ></v-btn>
+                                    </template>
+                                </v-hover>
                                 <v-btn v-else class="text-none" icon="mdi-basket-plus-outline" @click.stop="addToCart(product.id)"></v-btn>
 
                                 <div v-if="product.masterVariant.prices.length">
@@ -571,7 +625,11 @@
         margin-right: 4px;
     }
 
-    .added-to-cart-button {
+    .added-to-cart-button, .delete-from-cart-button {
         background-color: #099a9a;
+    }
+
+    .delete-from-cart-button {
+        color: #500101;
     }
 </style>
