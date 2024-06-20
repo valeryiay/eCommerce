@@ -916,7 +916,7 @@
                                                     <fieldset class="mb-4">
                                                         <legend>Contact Name</legend>
                                                         <v-row>
-                                                            <v-col>
+                                                            <v-col cols="12" md="6">
                                                                 <v-text-field
                                                                     v-model="addressDetails.addressFormModel.firstName"
                                                                     :rules="[
@@ -930,7 +930,7 @@
                                                                 >
                                                                 </v-text-field>
                                                             </v-col>
-                                                            <v-col>
+                                                            <v-col cols="12" md="6">
                                                                 <v-text-field
                                                                     v-model="addressDetails.addressFormModel.lastName"
                                                                     :rules="[
@@ -948,7 +948,7 @@
                                                     </fieldset>
 
                                                     <v-row>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-select
                                                                 v-model="addressDetails.addressFormModel.country"
                                                                 :items="addressDetails.countries"
@@ -964,7 +964,7 @@
                                                             >
                                                             </v-select>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-text-field
                                                                 v-model="addressDetails.addressFormModel.state"
                                                                 density="compact"
@@ -974,7 +974,7 @@
                                                             >
                                                             </v-text-field>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-text-field
                                                                 v-model="addressDetails.addressFormModel.postalCode"
                                                                 :rules="[commonValidationRules.required, commonValidationRules.zipCodeContainsFiveDigits]"
@@ -989,7 +989,7 @@
                                                     </v-row>
 
                                                     <v-row>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-text-field
                                                                 v-model="addressDetails.addressFormModel.city"
                                                                 :rules="[
@@ -1005,7 +1005,7 @@
                                                             >
                                                             </v-text-field>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-text-field
                                                                 v-model="addressDetails.addressFormModel.streetName"
                                                                 :rules="[
@@ -1020,7 +1020,7 @@
                                                             >
                                                             </v-text-field>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="4">
                                                             <v-text-field
                                                                 v-model="addressDetails.addressFormModel.streetNumber"
                                                                 density="compact"
@@ -1033,7 +1033,7 @@
                                                     </v-row>
 
                                                     <v-row>
-                                                        <v-col>
+                                                        <v-col cols="12" md="6">
                                                             <v-switch
                                                                 v-model="addressDetails.addressFormModel.isShipping"
                                                                 density="compact"
@@ -1042,7 +1042,7 @@
                                                                 @change="onShippingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="6">
                                                             <v-switch
                                                                 v-model="addressDetails.addressFormModel.isBilling"
                                                                 density="compact"
@@ -1054,7 +1054,7 @@
                                                     </v-row>
 
                                                     <v-row>
-                                                        <v-col>
+                                                        <v-col cols="12" md="6">
                                                             <v-switch
                                                                 v-model="addressDetails.addressFormModel.isShippingAddressDefault"
                                                                 density="compact"
@@ -1063,7 +1063,7 @@
                                                                 @change="onDefaultShippingAddressChange"
                                                             ></v-switch>
                                                         </v-col>
-                                                        <v-col>
+                                                        <v-col cols="12" md="6">
                                                             <v-switch
                                                                 v-model="addressDetails.addressFormModel.isBillingAddressDefault"
                                                                 density="compact"
@@ -1076,7 +1076,6 @@
 
                                                     <small class="text-caption text-medium-emphasis">*indicates required field</small>
                                                 </v-container>
-
                                             </v-card-text>
                                             <v-card-actions>
                                                 <v-spacer></v-spacer>

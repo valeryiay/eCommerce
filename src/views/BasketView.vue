@@ -24,7 +24,8 @@
             notification: {
                 isDisplay: false,
                 message: ""
-            }
+            },
+            alertClearCart: false
         }),
         methods: {
             async addToCart(productId: string, quantity: number = 1): Promise<void> {
@@ -108,6 +109,11 @@
                 }
             },
             async clearCart(): Promise<void> {
+                this.alertClearCart = true;
+            },
+            async confirmClearCart(): Promise<void> {
+                this.alertClearCart = false;
+
                 if (!this.authStore.user?.cart?.lineItems || this.authStore.user?.cart?.lineItems.length === 0) {
                     return;
                 }
@@ -292,7 +298,16 @@
                     </v-card-text>
                 </div>
             </v-card>
-
+            <v-alert
+                type="warning"
+                v-if="alertClearCart"
+                dismissible
+                @input="alertClearCart = false"
+            >
+                Are you sure you want to clear your shopping cart?
+                <v-btn @click="confirmClearCart" color="red">Yes</v-btn>
+                <v-btn @click="alertClearCart = false">No</v-btn>
+            </v-alert>
             <v-card class="order-summary-card ma-5 pa-5 w-50" max-width="400" max-height="500">
                 <h2 class="pt-2 pb-6">Order Summary</h2>
 
