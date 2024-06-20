@@ -142,12 +142,13 @@
             </v-col>
         </v-row>
         <v-row>
-            <v-col class="v-col-school">
+            <v-col class="v-col-school mb-2">
                 <v-card flat class="footer d-flex flex-column align-center pa-5 rounded-lg">
                     <v-card-text class="card-text text-center">
-                        This project was developed during the Frontend Course of Rolling Scopes. Read about the school here:
+                        This project was developed during the Frontend Course of Rolling Scopes.
+                        Read about the school here:
                     </v-card-text>
-                    <v-row>
+                    <v-row class="pb-5">
                         <a href="https://rs.school/" target="_blank">
                             <v-avatar size="100" class="pa-2">
                                 <img
@@ -211,5 +212,12 @@
 
     .footer {
         height: auto;
+    }
+
+    @media (max-width: 820px) {
+        .v-col-school {
+            padding: 0 12px;
+            margin: 0 auto;
+        }
     }
 </style>
