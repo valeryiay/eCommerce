@@ -17,11 +17,19 @@ const COUNTRIES = [
     }
 ];
 
+const PROMOCODES = {
+    "b5dcb74b-e9f7-405a-93c2-7fed70529e47": {
+        code: "TERNION24",
+        description: "25% off every cart item"
+    }
+}
+
 const MAX_PRICE_FILTER = 100000;
 
 export {
     LOCALSTORAGE_NAME,
     PRODUCTS_ON_PAGE,
+    PROMOCODES,
     MAX_PRICE_FILTER,
     COUNTRIES
 };

@@ -7,16 +7,20 @@
         getMyCarts,
         removeProductFromCart,
         createCart,
-        removeProductsFromCart
+        removeProductsFromCart,
+        addDiscountCode
     } from "@/services/commercetoolsApi";
 
     import type { CustomerWithToken } from "@/types";
+    import { PROMOCODES } from "@/constants";
 
     export default {
         data: () => ({
             authStore: useAuthStore(),
             promoCodeModel: "",
-            isPromoCodeApplied: false,
+            promoCodes: PROMOCODES,
+            isValidPromoCode: true,
+            isPromoCodeInputFocused: false,
             notification: {
                 isDisplay: false,
                 message: ""
@@ -136,8 +140,53 @@
             },
             async applyPromoCode() {
                 const inputCode = this.promoCodeModel.trim().toLowerCase();
+                const isValid = !(inputCode.length === 0) && inputCode === "ternion24";
 
-                this.isPromoCodeApplied = !(inputCode.length === 0) && inputCode === "ternion24";
+                this.isValidPromoCode = isValid;
+
+                if (!isValid || (this.authStore?.user?.cart?.discountCodes?.length || 0) > 0) {
+                    this.togglePromoCodeInputFocus();
+
+                    return;
+                }
+
+                this.promoCodeModel = "";
+
+                this.togglePromoCodeInputFocus();
+
+                this.notification.message = "";
+
+                try {
+                    const cartResult = await addDiscountCode(
+                        inputCode,
+                        this.authStore.user?.token?.access_token || "",
+                        this.authStore.user?.cart!.id || "",
+                        this.authStore.user?.cart!.version
+                    );
+
+                    console.info(cartResult);
+
+                    if (cartResult instanceof Error) {
+                        throw Error(cartResult.message);
+                    }
+
+                    this.authStore.updateUserData({
+                        user: this.authStore.user?.user || null,
+                        cart: cartResult,
+                        token: this.authStore!.user!.token
+                    });
+                } catch (error) {
+                    this.notification.message = String(error);
+                    this.notification.isDisplay = true;
+                }
+            },
+            togglePromoCodeInputFocus() {
+                this.isPromoCodeInputFocused = true;
+
+                setTimeout(() => this.isPromoCodeInputFocused = false, 300);
+            },
+            isPromoCodeExistRule() {
+                return this.isValidPromoCode || "This code is invalid";
             }
         },
         computed: {
@@ -150,7 +199,7 @@
 </script>
 
 <template>
-    <v-container v-if="(authStore.user?.cart?.lineItems?.length || 0) === 0" class="main-container">
+    <v-container v-if="(authStore.user?.cart?.lineItems?.length || 0) === 0">
         <h1 class="pt-5 pb-15">My Shopping Cart</h1>
         <v-row>
             <v-col class="empty-cart-message" cols="12">
@@ -170,126 +219,153 @@
         </v-row>
     </v-container>
     <v-container v-else fluid>
-        <v-row>
-            <v-col>
-                <v-row class="pa-5">
-                    <v-card class="products-list-card">
-                        <div class="d-flex align-center justify-space-between pt-5 pb-5 pl-5 pr-5">
-                            <h1>My Shopping Cart</h1>
-                            <p>{{ authStore.user?.cart?.lineItems.length }} Items</p>
+        <div class="cart-container">
+            <v-card class="products-list-card ma-5">
+                <div class="d-flex align-center justify-space-between pt-5 pb-5 pl-5 pr-5">
+                    <h1>My Shopping Cart</h1>
+                    <p>{{ authStore.user?.cart?.lineItems.length }} Items</p>
+                </div>
+
+                <v-divider></v-divider>
+
+                <v-table>
+                    <tbody>
+                        <tr
+                            v-for="lineItem in authStore.user?.cart?.lineItems"
+                            :key="lineItem.id"
+                        >
+                            <td>
+                                <div class="cart-avatar-section">
+                                    <v-avatar
+                                        size="100"
+                                        class="mt-3 mb-3"
+                                    >
+                                        <v-img :src="lineItem.variant.images[0].url"></v-img>
+                                    </v-avatar>
+                                    <v-list-item
+                                        :title="lineItem.name['en-GB']"
+                                        :subtitle="`€ ${lineItem.price.value.centAmount / 100}`"
+                                        class="d-inline-flex"
+                                    ></v-list-item>
+                                </div>
+                            </td>
+                            <td class="mt-3">
+                                <div class="cart-quantity-price-section">
+                                    <v-text-field
+                                        id="basket-quantity-field"
+                                        type="number"
+                                        class="mt-6"
+                                        :min="1"
+                                        :max="100"
+                                        :value="lineItem.quantity"
+                                        control-variant="split"
+                                        variant="solo"
+                                        max-width="140px"
+                                        hide-spin-buttons
+                                        readonly
+                                    >
+                                        <template v-slot:prepend>
+                                            <v-icon class="cursor-pointer" :disabled="lineItem.quantity <= 1" @click="removeFromCart(lineItem.productId)">mdi-minus</v-icon>
+                                        </template>
+                                        <template v-slot:append>
+                                            <v-icon class="cursor-pointer" :disabled="lineItem.quantity >= 15" @click="addToCart(lineItem.productId)">mdi-plus</v-icon>
+                                        </template>
+                                    </v-text-field>
+                                    <v-card-text class="cart-price-display text-h6 ml-5">
+                                        € {{ `${(lineItem.totalPrice.centAmount || 0) / 100}` }}
+                                    </v-card-text>
+                                </div>
+                            </td>
+                            <td>
+                                <v-btn icon="mdi-delete-outline" @click="removeFromCart(lineItem.productId, lineItem.quantity)"></v-btn>
+                            </td>
+                        </tr>
+                    </tbody>
+                </v-table>
+
+                <v-divider class="pb-13"></v-divider>
+
+                <div class="shopping-cart-bottom-controls">
+                    <v-card-text>
+                        <RouterLink class="text-blue-lighten-1 text-decoration-none" to="/products">
+                            <v-icon icon="mdi-chevron-left"></v-icon>
+                            <strong>Continue Shopping</strong>
+                        </RouterLink>
+                    </v-card-text>
+                    <v-card-text class="text-right pr-5">
+                        <p class="text-red-lighten-1 text-decoration-none cursor-pointer" @click="clearCart">
+                            <strong class="mr-2">Clear Cart</strong>
+                            <v-icon icon="mdi-backspace"></v-icon>
+                        </p>
+                    </v-card-text>
+                </div>
+            </v-card>
+
+            <v-card class="order-summary-card ma-5 pa-5 w-50" max-width="400" max-height="500">
+                <h2 class="pt-2 pb-6">Order Summary</h2>
+
+                <v-divider></v-divider>
+
+                <v-row>
+                    <v-col>
+                        <div class="d-flex align-center justify-space-between pt-5 pb-5">
+                            <p>Items {{ authStore.user?.cart?.lineItems.length }}</p>
+                            <p>€ {{ totalCost.toFixed(2) }}</p>
                         </div>
-
-                        <v-divider></v-divider>
-
-                        <v-table>
-                            <tbody>
-                                <tr
-                                    v-for="lineItem in authStore.user?.cart?.lineItems"
-                                    :key="lineItem.id"
-                                >
-                                    <td>
-                                        <v-avatar
-                                            size="100"
-                                            class="mt-3 mb-3"
-                                        >
-                                            <v-img :src="lineItem.variant.images[0].url"></v-img>
-                                        </v-avatar>
-                                        <v-list-item
-                                            :title="lineItem.name['en-GB']"
-                                            :subtitle="`€ ${lineItem.price.value.centAmount / 100}`"
-                                            class="d-inline-flex"
-                                        ></v-list-item>
-                                    </td>
-                                    <td>
-                                        <v-text-field
-                                            id="basket-quantity-field"
-                                            type="number"
-                                            class="mt-6"
-                                            :min="1"
-                                            :max="100"
-                                            :value="lineItem.quantity"
-                                            control-variant="split"
-                                            variant="solo"
-                                            max-width="140px"
-                                            hide-spin-buttons
-                                            readonly
-                                        >
-                                            <template v-slot:prepend>
-                                                <v-icon class="cursor-pointer" :disabled="lineItem.quantity <= 1" @click="removeFromCart(lineItem.productId)">mdi-minus</v-icon>
-                                            </template>
-                                            <template v-slot:append>
-                                                <v-icon class="cursor-pointer" :disabled="lineItem.quantity >= 15" @click="addToCart(lineItem.productId)">mdi-plus</v-icon>
-                                            </template>
-                                        </v-text-field>
-                                    </td>
-                                    <td>
-                                        € {{ `${(lineItem.price.value.centAmount / 100) * lineItem.quantity}` }}
-                                    </td>
-                                    <td>
-                                        <v-btn icon="mdi-delete-outline" @click="removeFromCart(lineItem.productId, lineItem.quantity)"></v-btn>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                    </v-card>
+                    </v-col>
                 </v-row>
-            </v-col>
-            <v-col>
-                <v-row class="pa-5">
-                    <v-card class="pa-5 w-50">
-                        <h2 class="pt-2 pb-6">Order Summary</h2>
-
-                        <v-divider></v-divider>
-
-                        <v-row>
-                            <v-col>
-                                <div class="d-flex align-center justify-space-between pt-5 pb-5">
-                                    <p>Items {{ authStore.user?.cart?.lineItems.length }}</p>
-                                    <p>€ {{ totalCost.toFixed(2) }}</p>
-                                </div>
-                            </v-col>
+                <v-row>
+                    <v-col class="mb-8">
+                        <h3 class="mb-3">Promo Code</h3>
+                        <v-row class="mt-3">
+                            <v-text-field
+                                v-model="promoCodeModel"
+                                :rules="[isPromoCodeExistRule]"
+                                :focused="isPromoCodeInputFocused"
+                                class="ml-2 mb-3"
+                                placeholder="Enter your code"
+                                density="compact"
+                                variant="outlined"
+                            ></v-text-field>
+                            <v-btn
+                                @click="applyPromoCode()"
+                                :disabled="promoCodeModel.length === 0"
+                                class="ml-1 mr-2 slight-margin-top"
+                            >
+                                Apply
+                            </v-btn>
                         </v-row>
-                        <v-row>
-                            <v-col class="mb-8">
-                                <h3 class="mb-3">Promo Code</h3>
-                                <v-text-field v-model="promoCodeModel" placeholder="Enter your code"></v-text-field>
-                                <div class="d-flex align-center justify-space-between pt-5 pb-5">
-                                    <v-btn @click="applyPromoCode()">Apply</v-btn>
-                                    <p v-if="isPromoCodeApplied" class="color-accent">- € {{ (totalCost * 0.25).toFixed(2) }}</p>
-                                </div>
-                            </v-col>
-                        </v-row>
-
-                        <v-divider></v-divider>
-
-                        <v-row>
-                            <v-col>
-                                <div class="d-flex align-center justify-space-between pt-5 pb-5">
-                                    <h3>Total Cost</h3>
-                                    <p v-if="!isPromoCodeApplied">€ {{ totalCost.toFixed(2) }}</p>
-                                    <p v-else>€ {{ (totalCost * (isPromoCodeApplied ? 0.75 : 1)).toFixed(2) }}</p>
-                                </div>
-                            </v-col>
-                        </v-row>
-                        <v-btn width="100%" color="#099a9a">Checkout</v-btn>
-                    </v-card>
+                        <div
+                            v-if="(authStore?.user?.cart?.discountCodes?.length || 0) > 0"
+                            class="d-flex align-center justify-space-between"
+                        >
+                            <v-list class="pt-0">
+                                <v-list-item
+                                    v-for="code in authStore.user?.cart?.discountCodes"
+                                    :key="code.discountCode.id"
+                                    :title="promoCodes[code.discountCode.id as keyof typeof promoCodes].code"
+                                    :subtitle="promoCodes[code.discountCode.id as keyof typeof promoCodes].description"
+                                    class="color-accent pt-0 pl-0"
+                                ></v-list-item>
+                            </v-list>
+                            <p class="color-accent">- € {{ (totalCost - ((authStore.user?.cart?.totalPrice?.centAmount || 0) / 100)).toFixed(2) }}</p>
+                        </div>
+                    </v-col>
                 </v-row>
-            </v-col>
-        </v-row>
-        <v-row class="pr-15">
-            <v-card-text>
-                <RouterLink class="text-blue-lighten-1 text-decoration-none" to="/products">
-                    <v-icon icon="mdi-chevron-left"></v-icon>
-                    <strong>Continue Shopping</strong>
-                </RouterLink>
-            </v-card-text>
-            <v-card-text>
-                <p class="text-red-lighten-1 text-decoration-none cursor-pointer pr-15" @click="clearCart">
-                    <strong class="mr-1">Clear Cart</strong>
-                    <v-icon icon="mdi-backspace"></v-icon>
-                </p>
-            </v-card-text>
-        </v-row>
+
+                <v-divider></v-divider>
+
+                <v-row>
+                    <v-col>
+                        <div class="d-flex align-center justify-space-between pt-5 pb-5">
+                            <h3>Total Cost</h3>
+                            <p>€ {{ ((authStore.user?.cart?.totalPrice?.centAmount || 0) / 100).toFixed(2) }}</p>
+                        </div>
+                    </v-col>
+                </v-row>
+                <v-btn width="100%" color="#099a9a">Checkout</v-btn>
+            </v-card>
+        </div>
     </v-container>
 </template>
 
@@ -302,6 +378,19 @@
         text-align: center;
     }
 
+    .cart-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .shopping-cart-bottom-controls {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background-color: #000000bf;
+    }
+
     .empty-cart-message {
         padding: 20px;
         font-size: 1.2em;
@@ -311,11 +400,70 @@
         width: 850px;
     }
 
+    .cart-quantity-price-section {
+        display: flex;
+        align-items: baseline;
+    }
+
     .white-color {
         color: white;
     }
 
     .color-accent {
         color: aquamarine;
+    }
+
+    .slight-margin-top {
+        margin-top: 2px;
+    }
+
+    @media (max-width: 1275px) {
+        .cart-container {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    @media (max-width: 855px) {
+        .products-list-card {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 835px) {
+        .cart-quantity-price-section {
+            flex-direction: column;
+            height: 100% !important;
+            align-items: center;
+        }
+
+        .cart-price-display {
+            margin-left: 0 !important;
+        }
+    }
+
+    @media (max-width: 790px) {
+        .order-summary-card {
+            flex-direction: column;
+        }
+
+        .cart-avatar-section {
+            display: flex;
+            flex-direction: column;
+            height: 100% !important;
+            align-items: center;
+        }
+    }
+
+    @media (max-width: 670px) {
+        .order-summary-card {
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .cart-avatar-section {
+            max-width: 120px;
+        }
     }
 </style>

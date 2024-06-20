@@ -102,7 +102,7 @@
     <v-container class="wrapper">
         <v-row>
             <v-col class="sale-container d-flex justify-between align-center">
-                <p>FLASH SALE: Use code TERNION24 to get 25% off selected items</p>
+                <p>FLASH SALE: Use code TERNION24 to get 25% off everything!</p>
             </v-col>
         </v-row>
         <v-row>
