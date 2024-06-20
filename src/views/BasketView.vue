@@ -164,8 +164,6 @@
                         this.authStore.user?.cart!.version
                     );
 
-                    console.info(cartResult);
-
                     if (cartResult instanceof Error) {
                         throw Error(cartResult.message);
                     }

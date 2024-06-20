@@ -3,13 +3,12 @@
     import { useAuthStore } from "@/store";
 
     export default {
-        async mounted() {
-            this.authStore = useAuthStore();
-            this.authStore.refreshToken();
+        async created() {
+            await this.authStore.refreshToken();
         },
         data: () => ({
             isDrawerOpen: false,
-            authStore: {} as any,
+            authStore: useAuthStore(),
             currentYear: new Date().getFullYear()
         }),
         methods: {
