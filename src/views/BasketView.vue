@@ -108,7 +108,7 @@
                     this.notification.isDisplay = true;
                 }
             },
-            async clearCart(): Promise<void> {
+            clearCart() {
                 this.alertClearCart = true;
             },
             async confirmClearCart(): Promise<void> {
@@ -298,16 +298,6 @@
                     </v-card-text>
                 </div>
             </v-card>
-            <v-alert
-                type="warning"
-                v-if="alertClearCart"
-                dismissible
-                @input="alertClearCart = false"
-            >
-                Are you sure you want to clear your shopping cart?
-                <v-btn @click="confirmClearCart" color="red">Yes</v-btn>
-                <v-btn @click="alertClearCart = false">No</v-btn>
-            </v-alert>
             <v-card class="order-summary-card ma-5 pa-5 w-50" max-width="400" max-height="500">
                 <h2 class="pt-2 pb-6">Order Summary</h2>
 
@@ -373,6 +363,18 @@
                 <v-btn width="100%" color="#099a9a">Checkout</v-btn>
             </v-card>
         </div>
+        <v-dialog max-width="450" v-model="alertClearCart">
+            <v-card title="Clear Cart" color="warning">
+                <v-alert type="warning" class="mb-8">
+                    Are you sure you want to clear your shopping cart?
+                </v-alert>
+                <v-card-actions id="clear-cart-actions-container">
+                    <v-spacer></v-spacer>
+                    <v-btn @click="confirmClearCart" color="red">Yes</v-btn>
+                    <v-btn @click="alertClearCart = false">No</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -425,6 +427,10 @@
 
     .slight-margin-top {
         margin-top: 2px;
+    }
+
+    #clear-cart-actions-container {
+        background-color: #000000a6;
     }
 
     @media (max-width: 1275px) {
