@@ -1,6 +1,7 @@
 const LOCALSTORAGE_NAME = "rss-ecommerce";
 
 const PRODUCTS_ON_PAGE = 20;
+const MAX_PRICE_FILTER = 100000;
 
 const COUNTRIES = [
     {
@@ -24,12 +25,10 @@ const PROMOCODES = {
     }
 }
 
-const MAX_PRICE_FILTER = 100000;
-
 export {
     LOCALSTORAGE_NAME,
     PRODUCTS_ON_PAGE,
-    PROMOCODES,
     MAX_PRICE_FILTER,
+    PROMOCODES,
     COUNTRIES
 };

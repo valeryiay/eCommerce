@@ -19,7 +19,6 @@ import type {
     CustomerWithToken,
     RegisterUser,
     TokenResponse,
-    ProductAllData,
     ProductApiResponse,
     Cart,
     CartAPI,
@@ -266,105 +265,6 @@ export async function getAnonymousToken() {
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(error.message);
-        }
-
-        throw new Error(CT_ERROR);
-    }
-}
-
-export async function addSpecialAddress(
-    addressId: string,
-    addressType: "shipping" | "billing" | "",
-    id: string,
-    bearerToken: string,
-    version: number
-): Promise<Customer> {
-    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/customers/${id}`;
-    const requestBody = {
-        version,
-        actions: [
-            {
-                action: addressType === "shipping" ? "addShippingAddressId" : "addBillingAddressId",
-                addressId
-            }
-        ]
-    };
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${bearerToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        const responseData = await response.json();
-
-        if (responseData.message) {
-            throw new Error(responseData.message);
-        }
-
-        return responseData;
-    } catch (error) {
-        if (error instanceof Error) {
-            if (error.message === CT_INVALID_JSON_ERROR) {
-                throw new Error(CT_ERROR);
-            }
-
-            if (error.message === CT_EXISTING_CUSTOMER_ERROR) {
-                throw new Error(CT_EXISTING_CUSTOMER_ERROR);
-            }
-        }
-
-        throw new Error(CT_ERROR);
-    }
-}
-
-export async function addAddress(
-    data: Address,
-    id: string,
-    bearerToken: string,
-    version: number
-): Promise<Customer> {
-    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/customers/${id}`;
-    const requestBody = {
-        version,
-        actions: [
-            {
-                action: "addAddress",
-                address: { ...data }
-            }
-        ]
-    };
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${bearerToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        const responseData = await response.json();
-
-        if (responseData.message) {
-            throw new Error(responseData.message);
-        }
-
-        return responseData;
-    } catch (error) {
-        if (error instanceof Error) {
-            if (error.message === CT_INVALID_JSON_ERROR) {
-                throw new Error(CT_ERROR);
-            }
-
-            if (error.message === CT_EXISTING_CUSTOMER_ERROR) {
-                throw new Error(CT_EXISTING_CUSTOMER_ERROR);
-            }
         }
 
         throw new Error(CT_ERROR);
@@ -740,40 +640,6 @@ export async function getProducts(
     }
 }
 
-export async function getProduct(productId: string): Promise<ProductAllData | null> {
-    const queryString = createQueryString({
-        filter: `store.com:"${productId}"`,
-    });
-
-    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/product-projections/search?${queryString}`;
-
-    const bearerToken = await fetchBearerToken();
-
-    if (bearerToken === null) {
-        throw new Error(CT_ERROR);
-    }
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${bearerToken}`
-            }
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-            throw new Error("Couldn't fetch the product");
-        }
-
-        return responseData.results[0] === undefined ? null : responseData.results[0];
-    } catch (error) {
-        throw new Error(CT_NETWORK_PROBLEM);
-    }
-}
-
 export async function getProductDetails(productId: string): Promise<ProductSingle> {
     const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/products/${productId}`;
 
@@ -1076,38 +942,6 @@ export async function getRefreshedToken(refreshToken: string): Promise<TokenResp
     }
 }
 
-export async function introspectToken(accessToken: string) {
-    const bearerToken = await fetchBearerToken();
-
-    if (bearerToken === null) {
-        throw new Error(CT_ERROR);
-    }
-
-    const endpoint = `https://auth.${apiRegion}.commercetools.com/oauth/introspect?token=${encodeURIComponent(
-        accessToken
-    )}`;
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        const responseData = await response.json();
-
-        return responseData;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-
-        throw new Error(CT_ERROR);
-    }
-}
-
 export async function removeProductsFromCart(
     accessToken: string,
     productIds: string[],
@@ -1157,38 +991,6 @@ export async function removeProductsFromCart(
                 throw new Error(CT_PRODUCT_NO_ID);
             }
 
-            throw new Error(responseData.message);
-        }
-
-        return responseData;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-
-        throw new Error(CT_ERROR);
-    }
-}
-
-export async function deleteCart(
-    accessToken: string,
-    cartId: string,
-    cartVersion: number
-): Promise<Cart> {
-    const endpoint = `https://api.${apiRegion}.commercetools.com/${projectKey}/me/carts/${cartId}?version=${cartVersion}`;
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        const responseData = await response.json();
-
-        if (responseData.message) {
             throw new Error(responseData.message);
         }
 

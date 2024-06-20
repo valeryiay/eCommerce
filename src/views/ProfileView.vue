@@ -1,6 +1,15 @@
 <script lang="ts">
     import { mergeProps } from "vue";
-    import type { AddressType, Customer, CustomerWithToken, DateOfBirthFormat, FullCustomerAddress, FullCustomerAddressModel } from "@/types";
+
+    import type {
+        AddressType,
+        Customer,
+        CustomerWithToken,
+        DateOfBirthFormat,
+        FullCustomerAddress,
+        FullCustomerAddressModel
+    } from "@/types";
+
     import { COUNTRIES } from "@/constants";
     import { formatDateOfBirth } from "@/utils/formatDateOfBirth";
     import { ValidationRules } from "@/utils/validationRules";
@@ -370,7 +379,7 @@
                     }
 
                     if (this.computedIsAddressBillingAndDeFaultDataChanged) {
-                        // TODO: Make builders out of this if
+                        // TODO: Make builders out of these ifs
                         // Shipping
                         if (this.addressDetails.addressFormModel.isShipping &&
                             this.addressDetails.addressFormModel.isShipping !== this.addressDetails.addressFormModelShadowCopy.isShipping

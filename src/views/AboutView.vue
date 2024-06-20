@@ -11,8 +11,10 @@
                             alt="Portrait photo"
                         />
                     </v-avatar>
+
                     <v-card-title class="text-center">Valeryia Yarash</v-card-title>
                     <v-card-subtitle class="text-center">Student</v-card-subtitle>
+
                     <v-card-text class="card-text">
                         Valeryia was instrumental in shaping the visual identity of our project.
                         She created a comprehensive Figma layout, which served as the blueprint for all our designs.
@@ -30,6 +32,7 @@
                         but also played a vital role in achieving our project goals.
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
+
                     <div class="social-icons mt-auto d-flex justify-center">
                         <a href="https://github.com/valeryiay" target="_blank">
                             <v-avatar size="100" class="pa-5">
@@ -54,8 +57,10 @@
                             alt="Portrait photo"
                         />
                     </v-avatar>
+
                     <v-card-title class="text-center">Vitaly Dushkin</v-card-title>
                     <v-card-subtitle class="text-center">Software Engineer</v-card-subtitle>
+
                     <v-card-text class="card-text">
                         Vitaly spearheaded our technical endeavors,
                         bringing a wealth of expertise and precision to the project.
@@ -74,6 +79,7 @@
                         Vitaly’s contributions were crucial in meeting all project milestones and delivering a successful application.
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
+
                     <div class="social-icons mt-auto d-flex justify-center">
                         <a href="https://github.com/vetalapo" target="_blank">
                             <v-avatar size="100" class="pa-5">
@@ -98,8 +104,10 @@
                             alt="Portrait photo"
                         />
                     </v-avatar>
+
                     <v-card-title class="text-center">Joëlle Marianek</v-card-title>
                     <v-card-subtitle class="text-center">Student</v-card-subtitle>
+
                     <v-card-text class="card-text">
                         Joelle was responsible for researching and setting up our project management tool,
                         as well as establishing meeting protocols.
@@ -116,6 +124,7 @@
                         Joelle’s contributions were vital in delivering a well-structured and successful application.
                         <p class="text-center px-5 pt-5">Want to see more? Catch us on:</p>
                     </v-card-text>
+
                     <div class="social-icons mt-auto d-flex justify-center">
                         <a href="https://github.com/JoMarianek" target="_blank">
                             <v-avatar size="100" class="pa-5">
