@@ -199,24 +199,18 @@
 </script>
 
 <template>
-    <v-container v-if="(authStore.user?.cart?.lineItems?.length || 0) === 0">
+    <v-container v-if="(authStore.user?.cart?.lineItems?.length || 0) === 0" class="empty-cart-container">
         <h1 class="pt-5 pb-15">My Shopping Cart</h1>
-        <v-row>
-            <v-col class="empty-cart-message" cols="12">
-                <v-alert type="info" prominent>
-                    <v-icon>mdi-cart-outline</v-icon>
-                    Your cart is empty! <RouterLink to="products" class="white-color">Start</RouterLink> adding items to your cart to see them here.
-                </v-alert>
-            </v-col>
-        </v-row>
-        <v-row>
-            <v-card-text>
-                <RouterLink class="text-info text-decoration-none text-h6" to="/products">
-                    <v-icon icon="mdi-chevron-left"></v-icon>
-                    <strong>Start Shopping</strong>
-                </RouterLink>
-            </v-card-text>
-        </v-row>
+        <v-alert type="info" class="empty-cart-message" prominent>
+            <v-icon>mdi-cart-outline</v-icon>
+            Your cart is empty! <RouterLink to="products" class="white-color">Start</RouterLink> adding items to your cart to see them here.
+        </v-alert>
+        <v-card-text>
+            <RouterLink class="text-info text-decoration-none text-h6" to="/products">
+                <v-icon icon="mdi-chevron-left"></v-icon>
+                <strong>Start Shopping</strong>
+            </RouterLink>
+        </v-card-text>
     </v-container>
     <v-container v-else fluid>
         <div class="cart-container">
@@ -370,12 +364,20 @@
 </template>
 
 <style scoped>
-    .main-container {
+    .empty-cart-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         max-width: 1600px;
         margin: 0 auto;
         padding: 20px;
         font-family: Poppins, sans-serif;
         text-align: center;
+    }
+
+    .empty-cart-message {
+        padding: 30px;
+        font-size: 1.2em;
     }
 
     .cart-container {
@@ -389,11 +391,6 @@
         bottom: 0;
         width: 100%;
         background-color: #000000bf;
-    }
-
-    .empty-cart-message {
-        padding: 20px;
-        font-size: 1.2em;
     }
 
     .products-list-card {
