@@ -283,8 +283,15 @@
                 const addressInfo = this.getAddressTypeAndIfDefault(item.id);
 
                 this.addressDetails.addressFormModel = { ...item, ...addressInfo } as FullCustomerAddressModel;
-
                 this.addressDetails.addressFormModelShadowCopy = { ...this.addressDetails.addressFormModel } as FullCustomerAddressModel;
+
+                if (!this.addressDetails.addressFormModel.firstName) {
+                    this.addressDetails.addressFormModel.firstName = this.authStore.user?.user?.firstName || "";
+                }
+
+                if (!this.addressDetails.addressFormModel.lastName) {
+                    this.addressDetails.addressFormModel.lastName = this.authStore.user?.user?.lastName || "";
+                }
 
                 this.addressDetails.dialogAddressNewOrUpdate = true;
             },
@@ -513,7 +520,8 @@
                     {
                         title: "Contact Name",
                         key: "contactName",
-                        value: (item: FullCustomerAddress) => `${ item.firstName } ${ item.lastName }`
+                        value: (item: FullCustomerAddress) =>
+                            `${ item.firstName || this.authStore.user?.user?.firstName } ${ item.lastName || this.authStore.user?.user?.lastName }`
                     },
                     {
                         title: "Country",
@@ -538,7 +546,7 @@
                         title: "Address",
                         key: "address",
                         value: (item: FullCustomerAddress) =>
-                            `${ item.streetName } ${ item.streetNumber }`
+                            `${ item.streetName } ${ item.streetNumber || "" }`
                     },
                     { title: "Postal Code", value: "postalCode" },
                     {

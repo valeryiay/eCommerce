@@ -81,11 +81,11 @@ const router = createRouter({
 router.beforeEach((to) => {
     const authStore = useAuthStore();
 
-    if (to.meta.requiresAuth && !authStore.isAuthorized) {
+    if (to.meta.requiresAuth && !authStore.isAuthorized()) {
         return { name: "login" };
     }
 
-    if (to.meta.requiresNoAuth && authStore.isAuthorized) {
+    if (to.meta.requiresNoAuth && authStore.isAuthorized()) {
         return { name: "root" };
     }
 });

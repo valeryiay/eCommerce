@@ -3,9 +3,13 @@
     import { useAuthStore } from "@/store";
 
     export default {
+        async mounted() {
+            this.authStore = useAuthStore();
+            this.authStore.refreshToken();
+        },
         data: () => ({
             isDrawerOpen: false,
-            authStore: useAuthStore(),
+            authStore: {} as any,
             currentYear: new Date().getFullYear()
         }),
         methods: {
@@ -49,7 +53,7 @@
                 <template v-slot:activator="{ props, isActive }">
                     <div class="user-container d-flex align-center cursor-pointer mr-3">
                         <v-card
-                            v-if="authStore.isAuthorized"
+                            v-if="authStore.isAuthorized()"
                             class="mx-auto d-flex align-center"
                             v-bind="props"
                         >
@@ -78,7 +82,7 @@
                     </div>
                 </template>
                 <v-card>
-                    <v-list v-if="authStore.isAuthorized" class="text-center">
+                    <v-list v-if="authStore.isAuthorized()" class="text-center">
                         <v-list-item>
                             <v-btn to="/profile" exact>Profile</v-btn>
                         </v-list-item>
