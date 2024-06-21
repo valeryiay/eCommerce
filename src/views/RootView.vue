@@ -114,9 +114,6 @@
                     <v-btn to="/products" exact>Products</v-btn>
                 </v-list-item>
                 <v-list-item>
-                    <v-btn to="/categories" exact>Categories</v-btn>
-                </v-list-item>
-                <v-list-item>
                     <v-btn to="/about" exact>About</v-btn>
                 </v-list-item>
             </v-list>
